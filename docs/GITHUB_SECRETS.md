@@ -36,7 +36,7 @@ cat release.keystore.base64
 | --- | --- |
 | Push ke `main`/`master` | Debug + release APK sebagai artifact |
 | Pull request | Sama, tapi cache Gradle read-only (nggak nulis cache ke branch utama) |
-| Push tag `v1.3.0` | Build + GitHub Release dengan APK dan `SHA256SUMS.txt` |
+| Push tag `v1.3.1` | Build + GitHub Release dengan APK dan `SHA256SUMS.txt` |
 | `workflow_dispatch` biasa | Build manual, versionName jadi `1.2.0-ci.<run number>` |
 | `workflow_dispatch` + `create_release` | Build + Release pakai tag `v<versionName>` |
 | `workflow_dispatch` + `bump_version` | Naikin versionName patch, commit dengan identitas `xykal`, push ke branch |

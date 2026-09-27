@@ -30,7 +30,7 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         targetSdk = 36
         versionCode = (System.getenv("VERSION_CODE") ?: "1").toInt()
-        versionName = System.getenv("VERSION_NAME") ?: "1.3.0"
+        versionName = System.getenv("VERSION_NAME") ?: "1.3.1"
         resourceConfigurations += listOf("in", "en")
         vectorDrawables { useSupportLibrary = false }
     }
