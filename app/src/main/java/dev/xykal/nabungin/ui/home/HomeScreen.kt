@@ -43,6 +43,8 @@ import dev.xykal.nabungin.ui.components.IconSquareButton
 import dev.xykal.nabungin.ui.components.NButton
 import dev.xykal.nabungin.ui.components.NabunginCard
 import dev.xykal.nabungin.ui.components.GoalArtwork
+import dev.xykal.nabungin.ui.components.BrandMark
+import dev.xykal.nabungin.ui.components.LiquidProgress
 import dev.xykal.nabungin.ui.components.ProgressRing
 import dev.xykal.nabungin.ui.components.ProgressTrack
 import dev.xykal.nabungin.ui.components.SectionHeader
@@ -72,11 +74,7 @@ fun HomeScreen(
     ) {
         Spacer(Modifier.height(14.dp))
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-            androidx.compose.foundation.Image(
-                painter = androidx.compose.ui.res.painterResource(dev.xykal.nabungin.R.drawable.ill_coin_jar),
-                contentDescription = null, modifier = Modifier.size(42.dp),
-                contentScale = androidx.compose.ui.layout.ContentScale.Crop,
-            )
+            BrandMark(size = 42.dp)
             Spacer(Modifier.width(10.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text("NABUNGIN", style = MaterialTheme.typography.labelSmall, color = colors.muted)
@@ -89,7 +87,7 @@ fun HomeScreen(
             IconSquareButton(icon = AppIcons.Sliders, onClick = onOpenSettings, contentDescription = "Setelan")
         }
         Spacer(Modifier.height(20.dp))
-        Row(verticalAlignment = Alignment.Bottom) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
             Column(modifier = Modifier.weight(1f)) {
                 Text("TOTAL TERKUMPUL", style = MaterialTheme.typography.labelSmall, color = colors.muted)
                 Spacer(Modifier.height(4.dp))
@@ -108,14 +106,15 @@ fun HomeScreen(
                     color = colors.muted,
                 )
             }
-            ProgressRing(
+            Spacer(Modifier.width(8.dp))
+            LiquidProgress(
                 progress = if (snapshot.totalTarget > 0L) {
                     (snapshot.totalSaved.toDouble() / snapshot.totalTarget.toDouble()).toFloat()
                 } else {
                     0f
                 },
-                size = 66.dp,
-                stroke = 7.dp,
+                size = 72.dp,
+                color = colors.accent,
             ) {
                 Text(
                     text = if (snapshot.totalTarget > 0L) {
@@ -145,6 +144,11 @@ fun HomeScreen(
             padding = androidx.compose.foundation.layout.PaddingValues(16.dp),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
+                androidx.compose.foundation.Image(
+                    androidx.compose.ui.res.painterResource(dev.xykal.nabungin.R.drawable.art_growth),
+                    contentDescription = null, modifier = Modifier.size(40.dp),
+                )
+                Spacer(Modifier.width(8.dp))
                 Text(
                     "30 HARI TERAKHIR",
                     style = MaterialTheme.typography.labelSmall,
@@ -224,7 +228,8 @@ private fun GoalCard(
     val colors = LocalNabunginColors.current
     val accent = GoalAccents[goal.accentIndex.coerceIn(0, GoalAccents.lastIndex)]
     NabunginCard(onClick = onOpen) {
-        if (goal.photoBase64.isNotBlank()) { GoalArtwork(goal.photoBase64); Spacer(Modifier.height(12.dp)) }
+        GoalArtwork(goal.photoBase64)
+        Spacer(Modifier.height(12.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconBubble(icon = AppIcons.of(goal.iconKey), accent = accent)
             Spacer(Modifier.width(12.dp))
@@ -259,19 +264,6 @@ private fun GoalCard(
         ProgressTrack(goal.progress, accent)
         Spacer(Modifier.height(14.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            ProgressRing(
-                progress = goal.progress,
-                size = 52.dp,
-                stroke = 6.dp,
-                progressColor = accent,
-            ) {
-                Text(
-                    text = "${(goal.progress * 100).toInt()}",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = colors.onSurface,
-                )
-            }
-            Spacer(Modifier.width(14.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = if (goal.isReached) "Target tercapai" else "Kurang ${Money.format(goal.remaining)}",
@@ -284,7 +276,7 @@ private fun GoalCard(
                     color = colors.muted,
                 )
             }
-            NButton(text = "Tabung", onClick = onDeposit, tone = dev.xykal.nabungin.ui.components.ButtonTone.Ghost, fillWidth = false)
+            NButton(text = "Tabung", onClick = onDeposit, tone = dev.xykal.nabungin.ui.components.ButtonTone.Quiet, fillWidth = false)
         }
     }
 }

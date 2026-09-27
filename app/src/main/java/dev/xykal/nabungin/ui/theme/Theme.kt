@@ -54,28 +54,28 @@ private val LightColors = NabunginColors(
 )
 
 private val DarkColors = NabunginColors(
-    background = Color(0xFF101A17),
-    surface = Color(0xFF192721),
-    surfaceAlt = Color(0xFF24372E),
-    onSurface = Color(0xFFF5F3EB),
-    muted = Color(0xFFBAC8BE),
-    hairline = Color(0xFF385044),
-    accent = Color(0xFF9CDBB3),
-    accentInk = Color(0xFF102017),
-    accentSoft = Color(0xFF274838),
-    danger = Color(0xFFFFA28D),
-    warning = Color(0xFFF1C874),
-    scrim = Color(0xDD07120D),
+    background = Color(0xFF0D1516),
+    surface = Color(0xFF182526),
+    surfaceAlt = Color(0xFF263839),
+    onSurface = Color(0xFFF4F6F1),
+    muted = Color(0xFFB5C7C2),
+    hairline = Color(0xFF355052),
+    accent = Color(0xFFA9E6C3),
+    accentInk = Color(0xFF12281F),
+    accentSoft = Color(0xFF254237),
+    danger = Color(0xFFFFB29C),
+    warning = Color(0xFFFFCD82),
+    scrim = Color(0xDD071111),
 )
 
 /** Warna aksen pilihan user untuk tiap tujuan. Sengaja earthy, bukan neon. */
 val GoalAccents: List<Color> = listOf(
-    Color(0xFF2E6B4F),
-    Color(0xFFC4553B),
-    Color(0xFF3C5A99),
-    Color(0xFFB98A17),
-    Color(0xFF7A4A6B),
-    Color(0xFF1F7A8C),
+    Color(0xFF4DAB7C),
+    Color(0xFFD87B61),
+    Color(0xFF749BD2),
+    Color(0xFFD1A853),
+    Color(0xFFBC8AB7),
+    Color(0xFF60AEB4),
 )
 
 val LocalNabunginColors = staticCompositionLocalOf { LightColors }

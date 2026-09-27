@@ -31,7 +31,7 @@ import dev.xykal.nabungin.ui.components.EmptyState
 import dev.xykal.nabungin.ui.components.IconBubble
 import dev.xykal.nabungin.ui.components.LabelValueRow
 import dev.xykal.nabungin.ui.components.NabunginCard
-import dev.xykal.nabungin.ui.components.ProgressRing
+import dev.xykal.nabungin.ui.components.LiquidProgress
 import dev.xykal.nabungin.ui.components.SectionHeader
 import dev.xykal.nabungin.ui.home.StatsViewModel
 import dev.xykal.nabungin.ui.icons.AppIcons
@@ -77,14 +77,14 @@ fun StatsScreen() {
                     LabelValueRow("Streak sekarang", "${snapshot.streak} hari")
                     LabelValueRow("Rencana seluruh tabungan", "${Money.format(snapshot.goals.sumOf { it.dailyPlan })}/hari")
                 }
-                ProgressRing(
+                LiquidProgress(
                     progress = if (snapshot.totalTarget > 0L) {
                         (snapshot.totalSaved.toDouble() / snapshot.totalTarget.toDouble()).toFloat()
                     } else {
                         0f
                     },
                     size = 92.dp,
-                    stroke = 9.dp,
+                    color = colors.accent,
                 ) {
                     Text(
                         text = if (snapshot.totalTarget > 0L) "${(snapshot.totalSaved.toDouble() / snapshot.totalTarget * 100).toInt()}%" else "0%",

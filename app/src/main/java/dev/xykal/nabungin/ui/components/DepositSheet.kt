@@ -35,7 +35,7 @@ fun DepositSheet(
     var note by remember { mutableStateOf("") }
     var day by remember { mutableStateOf(LocalDate.now()) }
     val amount = Money.parseDigits(digits)
-    val overTarget = goal.targetAmount > 0L && goal.saved + amount > goal.targetAmount
+    val overTarget = goal.targetAmount > 0L && amount > goal.remaining
 
     BottomSheet(visible = true, onDismiss = onDismiss) {
         Column(modifier = Modifier.fillMaxWidth()) {
@@ -79,10 +79,9 @@ fun DepositSheet(
                 }
             }
             Spacer(Modifier.height(14.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
                 Chip("Hari ini", day == LocalDate.now()) { day = LocalDate.now() }
                 Chip("Kemarin", day == LocalDate.now().minusDays(1)) { day = LocalDate.now().minusDays(1) }
-                Chip(Dates.full(day), true) { }
             }
             Spacer(Modifier.height(14.dp))
             NabunginTextField(

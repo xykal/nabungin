@@ -16,6 +16,11 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -40,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.testTag
 import dev.xykal.nabungin.core.appViewModel
 import dev.xykal.nabungin.domain.SavingsMath
+import dev.xykal.nabungin.domain.GoalValidation
 import dev.xykal.nabungin.domain.format.Dates
 import dev.xykal.nabungin.domain.format.Money
 import dev.xykal.nabungin.domain.model.AutoRule
@@ -74,6 +80,9 @@ fun GoalEditScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var error by remember { mutableStateOf<String?>(null) }
+    var showErrors by remember { mutableStateOf(false) }
+    var showAdvanced by remember { mutableStateOf(false) }
+    val formScroll = rememberScrollState()
 
     var photoBase64 by remember { mutableStateOf("") }
     var photoBusy by remember { mutableStateOf(false) }
@@ -133,11 +142,13 @@ fun GoalEditScreen(
     val dailyPlan = Money.parseDigits(dailyPlanDigits)
     val needed = SavingsMath.requiredPerDay(target, deadline)
     val forecast = SavingsMath.projectedDate(target, dailyPlan)
+    val validation = GoalValidation.validate(name, target, deadline, ruleEnabled, Money.parseDigits(ruleAmountDigits))
 
+    Box(modifier = Modifier.fillMaxSize()) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
+            .verticalScroll(formScroll)
             .statusBarsPadding()
             .padding(horizontal = 20.dp),
     ) {
@@ -151,16 +162,19 @@ fun GoalEditScreen(
         )
         Spacer(Modifier.height(18.dp))
 
-        Text("Biar tiap rupiah ada arahnya.", style = MaterialTheme.typography.bodyMedium, color = colors.muted)
+        Text("Mulai dari tujuan & nominal. Detail lainnya boleh nanti.", style = MaterialTheme.typography.bodyMedium, color = colors.muted)
         Spacer(Modifier.height(22.dp))
+        Text("01  ·  TUJUAN", style = MaterialTheme.typography.labelSmall, color = colors.accent)
+        Spacer(Modifier.height(12.dp))
         SectionHeader(title = "Mau nabung buat apa?")
         Spacer(Modifier.height(8.dp))
         NabunginTextField(
             value = name,
-            onValueChange = { name = it },
+            onValueChange = { name = it; error = null },
             placeholder = "Misal: Laptop baru / Dana darurat",
             testTag = "goal-name",
         )
+        if (showErrors && validation.name != null) FieldError(validation.name)
         Spacer(Modifier.height(14.dp))
         SectionHeader(title = "Alasan & cerita (opsional)")
         Spacer(Modifier.height(8.dp))
@@ -171,14 +185,16 @@ fun GoalEditScreen(
             maxChars = 120,
         )
         Spacer(Modifier.height(18.dp))
-
+        Text("02  ·  NOMINAL & WAKTU", style = MaterialTheme.typography.labelSmall, color = colors.accent)
+        Spacer(Modifier.height(12.dp))
         SectionHeader(title = "Target nominal")
         Spacer(Modifier.height(4.dp))
         AmountKeypadField(
             digits = targetDigits,
-            onDigitsChange = { targetDigits = it },
-            hint = "Tulis nominal penuh, tanpa titik",
+            onDigitsChange = { targetDigits = it; error = null },
+            hint = "Tekan angka target. Ini bukan jumlah yang sudah terkumpul.",
         )
+        if (showErrors && validation.target != null) FieldError(validation.target)
         Spacer(Modifier.height(18.dp))
 
         SectionHeader(title = "Deadline")
@@ -211,15 +227,16 @@ fun GoalEditScreen(
                         base.year,
                         base.monthValue - 1,
                         base.dayOfMonth,
-                    ).show()
+                    ).apply { datePicker.minDate = System.currentTimeMillis() + 86_400_000L }.show()
                 },
                 tone = ButtonTone.Quiet,
                 fillWidth = false,
             )
         }
+        if (showErrors && validation.deadline != null) FieldError(validation.deadline)
         Spacer(Modifier.height(18.dp))
 
-        SectionHeader(title = "Mau tabung berapa per hari?")
+        SectionHeader(title = "Rencana per hari (opsional)")
         Spacer(Modifier.height(8.dp))
         NabunginCard(padding = PaddingValues(16.dp)) {
             Text(
@@ -253,6 +270,14 @@ fun GoalEditScreen(
         }
         Spacer(Modifier.height(18.dp))
 
+        Text("03  ·  PERSONALISASI", style = MaterialTheme.typography.labelSmall, color = colors.accent)
+        Spacer(Modifier.height(10.dp))
+        NButton(
+            text = if (showAdvanced) "Sembunyikan foto, ikon & jadwal" else "Atur foto, ikon & auto-save (opsional)",
+            onClick = { showAdvanced = !showAdvanced }, tone = ButtonTone.Quiet,
+        )
+        if (showAdvanced) {
+            Spacer(Modifier.height(16.dp))
         SectionHeader(title = "Gambar tujuan")
         Spacer(Modifier.height(8.dp))
         GoalArtwork(photoBase64)
@@ -325,7 +350,7 @@ fun GoalEditScreen(
                         text = if (ruleEnabled) {
                             "${Money.format(Money.parseDigits(ruleAmountDigits))} - ${ruleInterval.label} - %02d:00".format(ruleHour)
                         } else {
-                            "Catat tabungan berkala secara otomatis"
+                            "Mencatat tabungan otomatis, bukan menarik uang dari rekening"
                         },
                         style = MaterialTheme.typography.bodySmall,
                         color = colors.muted,
@@ -341,7 +366,7 @@ fun GoalEditScreen(
                     }
                 }
                 Spacer(Modifier.height(8.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
                     listOf(6, 9, 12, 18, 20).forEach { hour ->
                         Chip("%02d:00".format(hour), ruleHour == hour) { ruleHour = hour }
                     }
@@ -355,23 +380,24 @@ fun GoalEditScreen(
             }
         }
 
-        if (error != null) {
-            Spacer(Modifier.height(12.dp))
-            Text(error ?: "", style = MaterialTheme.typography.bodyMedium, color = colors.danger)
+            if (showErrors && validation.ruleAmount != null) FieldError(validation.ruleAmount)
         }
 
-        Spacer(Modifier.height(24.dp))
-        NButton(
-            text = if (goalId > 0L) "Simpan perubahan" else "Buat tabungan",
-            modifier = Modifier.testTag("save-goal"),
+        Spacer(Modifier.height(125.dp))
+    }
+    Column(modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth()
+        .background(colors.background).navigationBarsPadding().padding(horizontal = 20.dp, vertical = 10.dp)) {
+        if (error != null) Text(error ?: "", style = MaterialTheme.typography.bodySmall, color = colors.danger)
+        NButton(text = if (goalId > 0L) "Simpan perubahan" else "Buat tabungan",
+            modifier = Modifier.testTag("save-goal"), enabled = loaded && !photoBusy,
             onClick = {
-                when {
-                    name.isBlank() -> error = "Nama tujuan wajib diisi"
-                    target <= 0L -> error = "Target nominal harus lebih dari 0"
-                    deadline != null && !deadline!!.isAfter(LocalDate.now()) -> error = "Tanggal target harus setelah hari ini"
-                    ruleEnabled && Money.parseDigits(ruleAmountDigits) <= 0L -> error = "Isi nominal tabungan otomatis atau matikan jadwal"
-                    else -> {
-                        error = null
+                showErrors = true
+                if (!validation.isValid) {
+                    error = "Cek: ${validation.first}"
+                    if (validation.ruleAmount != null) showAdvanced = true
+                    else scope.launch { formScroll.animateScrollTo(0) }
+                } else {
+                    error = null
                         val goal = Goal(
                             id = if (goalId > 0L) goalId else 0L,
                             name = name,
@@ -397,15 +423,9 @@ fun GoalEditScreen(
                             null
                         }
                         vm.save(goal, rule) { onDone() }
-                    }
                 }
-            },
-            enabled = loaded && !photoBusy,
-            icon = AppIcons.Check,
-        )
-        Spacer(Modifier.height(10.dp))
-        NButton(text = "Batal", onClick = onBack, tone = ButtonTone.Ghost)
-        Spacer(Modifier.height(40.dp))
+            }, icon = AppIcons.Check)
+    }
     }
 
     if (showPlanSheet) {
@@ -445,3 +465,10 @@ fun GoalEditScreen(
 
 private fun Modifier.clickablePick(onClick: () -> Unit): Modifier =
     this.clickable(onClick = onClick)
+
+@Composable
+private fun FieldError(message: String) {
+    val colors = LocalNabunginColors.current
+    Spacer(Modifier.height(6.dp))
+    Text(message, color = colors.danger, style = MaterialTheme.typography.bodySmall)
+}

@@ -1,6 +1,8 @@
 package dev.xykal.nabungin.ui.goal
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -50,6 +52,7 @@ import dev.xykal.nabungin.ui.components.NabunginCard
 import dev.xykal.nabungin.ui.components.NabunginTopBar
 import dev.xykal.nabungin.ui.components.GoalArtwork
 import dev.xykal.nabungin.ui.components.LiquidProgress
+import dev.xykal.nabungin.ui.components.SavingsSparkle
 import dev.xykal.nabungin.ui.components.ProgressRing
 import dev.xykal.nabungin.ui.components.SectionHeader
 import dev.xykal.nabungin.ui.components.SheetTitle
@@ -131,15 +134,18 @@ fun GoalDetailScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            LiquidProgress(progress = current.progress, size = 168.dp, color = accent) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = "${(current.progress * 100).toInt()}%",
-                        style = MaterialTheme.typography.displayMedium,
-                        color = colors.onSurface,
-                    )
-                    Text("terkumpul", style = MaterialTheme.typography.bodySmall, color = colors.muted)
+            Box(contentAlignment = Alignment.Center, modifier = Modifier.size(190.dp)) {
+                LiquidProgress(progress = current.progress, size = 168.dp, color = accent) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "${(current.progress * 100).toInt()}%",
+                            style = MaterialTheme.typography.displayMedium,
+                            color = colors.onSurface,
+                        )
+                        Text("terkumpul", style = MaterialTheme.typography.bodySmall, color = colors.muted)
+                    }
                 }
+                SavingsSparkle(trigger = current.saved, color = accent)
             }
             Spacer(Modifier.height(16.dp))
             AmountText(amount = current.saved, color = accent)
@@ -151,6 +157,8 @@ fun GoalDetailScreen(
         }
 
         Spacer(Modifier.height(22.dp))
+        SectionHeader(title = "Rincian tujuan")
+        Spacer(Modifier.height(10.dp))
         NabunginCard(padding = PaddingValues(18.dp)) {
             LabelValueRow("Sisa ke target", Money.format(current.remaining))
             LabelValueRow("Rencana harian", if (current.dailyPlan > 0L) "${Money.format(current.dailyPlan)}/hari" else "Belum diatur")
@@ -220,6 +228,8 @@ fun GoalDetailScreen(
         }
 
         Spacer(Modifier.height(18.dp))
+        NButton(text = "Tabung sekarang", onClick = { showDeposit = true }, icon = AppIcons.Plus)
+        Spacer(Modifier.height(24.dp))
         SectionHeader(title = "Riwayat menabung")
         Spacer(Modifier.height(8.dp))
         if (deposits.isEmpty()) {
@@ -239,8 +249,6 @@ fun GoalDetailScreen(
         }
 
         Spacer(Modifier.height(20.dp))
-        NButton(text = "Tabung sekarang", onClick = { showDeposit = true }, icon = AppIcons.Plus)
-        Spacer(Modifier.height(10.dp))
         NButton(
             text = "Hapus tujuan ini",
             onClick = { confirmDelete = true },

@@ -24,6 +24,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.style.TextOverflow
 import dev.xykal.nabungin.domain.format.Money
 import dev.xykal.nabungin.ui.icons.AppIcons
 import dev.xykal.nabungin.ui.theme.LocalNabunginColors
@@ -44,10 +45,14 @@ fun NabunginTopBar(
             IconSquareButton(icon = AppIcons.Back, onClick = onBack, contentDescription = "Kembali")
             Spacer(Modifier.width(14.dp))
         }
+        BrandMark(size = 34.dp)
+        Spacer(Modifier.width(9.dp))
         Text(
             text = title,
             style = MaterialTheme.typography.titleLarge,
             color = colors.onSurface,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f),
         )
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), content = actions)
@@ -81,8 +86,9 @@ fun LabelValueRow(
     valueColor: androidx.compose.ui.graphics.Color = LocalNabunginColors.current.onSurface,
 ) {
     val colors = LocalNabunginColors.current
-    Row(modifier = modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(label, style = MaterialTheme.typography.bodyMedium, color = colors.muted, modifier = Modifier.weight(1f))
+    Column(modifier = modifier.fillMaxWidth().padding(vertical = 9.dp)) {
+        Text(label, style = MaterialTheme.typography.bodySmall, color = colors.muted)
+        Spacer(Modifier.height(3.dp))
         Text(value, style = MaterialTheme.typography.bodyLarge, color = valueColor)
     }
 }
@@ -150,7 +156,7 @@ fun ConfirmOverlay(
     val colors = LocalNabunginColors.current
     Box(
         modifier = Modifier
-            .fillMaxWidth()
+            .fillMaxSize()
             .background(colors.scrim),
         contentAlignment = Alignment.Center,
     ) {

@@ -14,14 +14,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import dev.xykal.nabungin.R
 import androidx.compose.ui.res.painterResource
 
 @Composable
-fun GoalArtwork(photo: String, modifier: Modifier = Modifier, fallback: Int = R.drawable.ill_target_sprout) {
+fun GoalArtwork(photo: String, modifier: Modifier = Modifier, fallback: Int = R.drawable.art_goal) {
     val bitmap = remember(photo) {
         if (photo.isBlank()) null else runCatching {
             val bytes = Base64.decode(photo, Base64.DEFAULT)
@@ -29,10 +28,10 @@ fun GoalArtwork(photo: String, modifier: Modifier = Modifier, fallback: Int = R.
         }.getOrNull()
     }
     Box(modifier = modifier.fillMaxWidth().height(150.dp).clip(RoundedCornerShape(16.dp))
-        .background(Color(0xFF32694C)), contentAlignment = Alignment.Center) {
+        .background(dev.xykal.nabungin.ui.theme.LocalNabunginColors.current.accentSoft), contentAlignment = Alignment.Center) {
         if (bitmap != null) Image(bitmap, contentDescription = "Gambar tujuan tabungan",
             modifier = Modifier.fillMaxWidth().height(150.dp), contentScale = ContentScale.Crop)
         else Image(painterResource(fallback), contentDescription = "Ilustrasi tujuan tabungan",
-            modifier = Modifier.fillMaxWidth().height(150.dp), contentScale = ContentScale.Crop)
+            modifier = Modifier.fillMaxWidth().height(150.dp), contentScale = ContentScale.Fit)
     }
 }

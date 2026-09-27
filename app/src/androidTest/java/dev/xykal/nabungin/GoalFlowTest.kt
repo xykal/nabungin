@@ -27,7 +27,7 @@ class GoalFlowTest {
         compose.onNodeWithText("0", useUnmergedTree = true).performClick()
         compose.onNodeWithText("0", useUnmergedTree = true).performClick()
         compose.onNodeWithText("0", useUnmergedTree = true).performClick()
-        compose.onNodeWithTag("save-goal").performScrollTo().performClick()
+        compose.onNodeWithTag("save-goal").performClick()
         compose.waitUntil(10_000) {
             compose.onAllNodesWithText("Laptop kerja baru").fetchSemanticsNodes().isNotEmpty()
         }
