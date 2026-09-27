@@ -27,6 +27,7 @@ import dev.xykal.nabungin.domain.format.Dates
 import dev.xykal.nabungin.domain.format.Money
 import dev.xykal.nabungin.ui.components.BarChart
 import dev.xykal.nabungin.ui.components.animatedAmount
+import dev.xykal.nabungin.ui.components.BrandMark
 import dev.xykal.nabungin.ui.components.EmptyState
 import dev.xykal.nabungin.ui.components.IconBubble
 import dev.xykal.nabungin.ui.components.LabelValueRow
@@ -57,6 +58,8 @@ fun StatsScreen() {
             .padding(horizontal = 20.dp),
     ) {
         Spacer(Modifier.height(14.dp))
+        BrandMark(size = 36.dp)
+        Spacer(Modifier.height(10.dp))
         Text("STATISTIK", style = MaterialTheme.typography.labelSmall, color = colors.muted)
         Spacer(Modifier.height(4.dp))
         Text(

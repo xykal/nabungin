@@ -32,6 +32,7 @@ import dev.xykal.nabungin.domain.format.Money
 import dev.xykal.nabungin.domain.model.DepositSource
 import dev.xykal.nabungin.ui.components.AmountText
 import dev.xykal.nabungin.ui.components.Chip
+import dev.xykal.nabungin.ui.components.BrandMark
 import dev.xykal.nabungin.ui.components.EmptyState
 import dev.xykal.nabungin.ui.components.IconSquareButton
 import dev.xykal.nabungin.ui.components.NabunginCard
@@ -61,6 +62,8 @@ fun HistoryScreen(onOpenGoal: (Long) -> Unit) {
             .padding(horizontal = 20.dp),
     ) {
         Spacer(Modifier.height(14.dp))
+        BrandMark(size = 36.dp)
+        Spacer(Modifier.height(10.dp))
         Text("RIWAYAT", style = MaterialTheme.typography.labelSmall, color = colors.muted)
         Spacer(Modifier.height(4.dp))
         Text(
