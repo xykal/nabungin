@@ -1,5 +1,6 @@
 package dev.xykal.nabungin.data.repo
 
+import androidx.room.withTransaction
 import dev.xykal.nabungin.data.local.AutoRuleDao
 import dev.xykal.nabungin.data.local.AutoRuleEntity
 import dev.xykal.nabungin.data.local.DepositDao
@@ -23,6 +24,7 @@ class SavingsRepository(
     private val goalDao: GoalDao,
     private val depositDao: DepositDao,
     private val ruleDao: AutoRuleDao,
+    private val database: dev.xykal.nabungin.data.local.NabunginDatabase,
 ) {
 
     val goals: Flow<List<Goal>> = combine(
@@ -155,12 +157,14 @@ class SavingsRepository(
         deposits: List<DepositEntity>,
         rules: List<AutoRuleEntity>,
     ) {
-        depositDao.wipe()
-        ruleDao.wipe()
-        goalDao.wipe()
-        goals.forEach { goalDao.insert(it.copy(id = it.id)) }
-        deposits.forEach { depositDao.insert(it) }
-        rules.forEach { ruleDao.insert(it) }
+        database.withTransaction {
+            depositDao.wipe()
+            ruleDao.wipe()
+            goalDao.wipe()
+            goals.forEach { goalDao.insert(it) }
+            deposits.forEach { depositDao.insert(it) }
+            rules.forEach { ruleDao.insert(it) }
+        }
     }
 
     suspend fun seedIfEmpty() {
@@ -191,6 +195,7 @@ private fun GoalEntity.toDomain(saved: Long, count: Int, lastDay: LocalDate?) = 
     category = category,
     purpose = purpose,
     dailyPlan = dailyPlan,
+    photoBase64 = photoBase64,
     createdAtMillis = createdAtMillis,
     archived = archived,
     saved = saved,
@@ -208,6 +213,7 @@ private fun Goal.toEntity() = GoalEntity(
     category = category,
     purpose = purpose,
     dailyPlan = dailyPlan,
+    photoBase64 = photoBase64,
     createdAtMillis = createdAtMillis,
     archived = archived,
 )

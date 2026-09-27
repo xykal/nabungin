@@ -48,6 +48,8 @@ import dev.xykal.nabungin.ui.components.LabelValueRow
 import dev.xykal.nabungin.ui.components.NButton
 import dev.xykal.nabungin.ui.components.NabunginCard
 import dev.xykal.nabungin.ui.components.NabunginTopBar
+import dev.xykal.nabungin.ui.components.GoalArtwork
+import dev.xykal.nabungin.ui.components.LiquidProgress
 import dev.xykal.nabungin.ui.components.ProgressRing
 import dev.xykal.nabungin.ui.components.SectionHeader
 import dev.xykal.nabungin.ui.components.SheetTitle
@@ -119,6 +121,7 @@ fun GoalDetailScreen(
         val forecast = SavingsMath.projectedDate(current.remaining, current.dailyPlan)
         val currentRule = rule
 
+        GoalArtwork(current.photoBase64)
         if (current.purpose.isNotBlank()) {
             Spacer(Modifier.height(12.dp))
             Text(current.purpose, style = MaterialTheme.typography.bodyMedium, color = colors.muted)
@@ -128,7 +131,7 @@ fun GoalDetailScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            ProgressRing(progress = current.progress, size = 168.dp, stroke = 14.dp, progressColor = accent) {
+            LiquidProgress(progress = current.progress, size = 168.dp, color = accent) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
                         text = "${(current.progress * 100).toInt()}%",

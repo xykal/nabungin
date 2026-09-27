@@ -23,6 +23,7 @@ data class BackupGoal(
     val category: String = "Umum",
     val purpose: String = "",
     val dailyPlan: Long = 0L,
+    val photoBase64: String = "",
     val createdAtMillis: Long = 0L,
     val archived: Boolean = false,
 )
@@ -52,7 +53,7 @@ data class BackupRule(
 
 @Serializable
 data class BackupFile(
-    val schema: Int = 1,
+    val schema: Int = 2,
     val app: String = "nabungin",
     val exportedAtMillis: Long = System.currentTimeMillis(),
     val goals: List<BackupGoal> = emptyList(),
@@ -90,11 +91,11 @@ class BackupManager(private val repository: SavingsRepository) {
                 input.readBytes().toString(Charsets.UTF_8)
             } ?: error("Tidak bisa membaca berkas")
             val file = json.decodeFromString<BackupFile>(text)
-            require(file.app == "nabungin" && file.schema == 1) { "Format backup tidak dikenal" }
+            require(file.app == "nabungin" && file.schema in 1..2) { "Format backup tidak dikenal" }
             require(file.goals.size <= 2_000 && file.deposits.size <= 100_000) { "Backup terlalu besar" }
             val ids = file.goals.map { it.id }.toSet()
             require(ids.size == file.goals.size && ids.none { it <= 0L }) { "ID tujuan duplikat atau tidak valid" }
-            require(file.goals.all { it.targetAmount > 0L && it.dailyPlan >= 0L && it.name.isNotBlank() }) { "Target tabungan tidak valid" }
+            require(file.goals.all { it.targetAmount > 0L && it.dailyPlan >= 0L && it.name.isNotBlank() && dev.xykal.nabungin.data.local.GoalPhoto.valid(it.photoBase64) }) { "Target tabungan tidak valid" }
             require(file.deposits.all { it.goalId in ids && it.amount > 0L }) { "Catatan tabungan tidak valid" }
             require(file.rules.all { it.goalId in ids && it.amount > 0L }) { "Aturan otomatis tidak valid" }
             repository.importAll(
@@ -110,14 +111,14 @@ class BackupManager(private val repository: SavingsRepository) {
 private fun GoalEntity.toBackup() = BackupGoal(
     id = id, name = name, targetAmount = targetAmount, deadlineEpochDay = deadlineEpochDay,
     accentIndex = accentIndex, iconKey = iconKey, category = category,
-    purpose = purpose, dailyPlan = dailyPlan,
+    purpose = purpose, dailyPlan = dailyPlan, photoBase64 = photoBase64,
     createdAtMillis = createdAtMillis, archived = archived,
 )
 
 private fun BackupGoal.toEntity() = GoalEntity(
     id = id, name = name, targetAmount = targetAmount, deadlineEpochDay = deadlineEpochDay,
     accentIndex = accentIndex, iconKey = iconKey, category = category,
-    purpose = purpose, dailyPlan = dailyPlan,
+    purpose = purpose, dailyPlan = dailyPlan, photoBase64 = photoBase64,
     createdAtMillis = createdAtMillis, archived = archived,
 )
 

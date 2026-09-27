@@ -42,6 +42,7 @@ import dev.xykal.nabungin.ui.components.IconBubble
 import dev.xykal.nabungin.ui.components.IconSquareButton
 import dev.xykal.nabungin.ui.components.NButton
 import dev.xykal.nabungin.ui.components.NabunginCard
+import dev.xykal.nabungin.ui.components.GoalArtwork
 import dev.xykal.nabungin.ui.components.ProgressRing
 import dev.xykal.nabungin.ui.components.ProgressTrack
 import dev.xykal.nabungin.ui.components.SectionHeader
@@ -71,6 +72,12 @@ fun HomeScreen(
     ) {
         Spacer(Modifier.height(14.dp))
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+            androidx.compose.foundation.Image(
+                painter = androidx.compose.ui.res.painterResource(dev.xykal.nabungin.R.drawable.ill_coin_jar),
+                contentDescription = null, modifier = Modifier.size(42.dp),
+                contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+            )
+            Spacer(Modifier.width(10.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text("NABUNGIN", style = MaterialTheme.typography.labelSmall, color = colors.muted)
                 Text(
@@ -217,6 +224,7 @@ private fun GoalCard(
     val colors = LocalNabunginColors.current
     val accent = GoalAccents[goal.accentIndex.coerceIn(0, GoalAccents.lastIndex)]
     NabunginCard(onClick = onOpen) {
+        if (goal.photoBase64.isNotBlank()) { GoalArtwork(goal.photoBase64); Spacer(Modifier.height(12.dp)) }
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconBubble(icon = AppIcons.of(goal.iconKey), accent = accent)
             Spacer(Modifier.width(12.dp))

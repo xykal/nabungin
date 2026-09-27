@@ -17,6 +17,7 @@ data class GoalEntity(
     val category: String = "Umum",
     val purpose: String = "",
     val dailyPlan: Long = 0L,
+    val photoBase64: String = "",
     val createdAtMillis: Long = System.currentTimeMillis(),
     val archived: Boolean = false,
 )

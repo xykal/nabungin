@@ -9,7 +9,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [GoalEntity::class, DepositEntity::class, AutoRuleEntity::class],
-    version = 2,
+    version = 3,
     exportSchema = false,
 )
 abstract class NabunginDatabase : RoomDatabase() {
@@ -26,6 +26,12 @@ abstract class NabunginDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE goals ADD COLUMN photoBase64 TEXT NOT NULL DEFAULT ''")
+            }
+        }
+
         fun build(context: Context): NabunginDatabase =
             Room.databaseBuilder(context.applicationContext, NabunginDatabase::class.java, "nabungin.db")
                 .addCallback(object : Callback() {
@@ -34,7 +40,7 @@ abstract class NabunginDatabase : RoomDatabase() {
                         db.execSQL("PRAGMA foreign_keys = ON")
                     }
                 })
-                .addMigrations(MIGRATION_1_2)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                 .build()
     }
 }

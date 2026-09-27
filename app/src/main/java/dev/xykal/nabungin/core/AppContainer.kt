@@ -18,6 +18,7 @@ class AppContainer(context: Context) {
         goalDao = database.goalDao(),
         depositDao = database.depositDao(),
         ruleDao = database.autoRuleDao(),
+        database = database,
     )
     val backup: BackupManager = BackupManager(repository)
 }

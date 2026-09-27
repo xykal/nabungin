@@ -92,13 +92,13 @@ jobs:
         run: |
           if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
             NAME="${GITHUB_REF_NAME#v}"
-            CODE="${GITHUB_RUN_NUMBER}"
+            CODE="$((GITHUB_RUN_NUMBER + 100))"
           elif [ -n "${{ inputs.version_name }}" ]; then
             NAME="${{ inputs.version_name }}"
-            CODE="${GITHUB_RUN_NUMBER}"
+            CODE="$((GITHUB_RUN_NUMBER + 100))"
           else
-            NAME="1.0.0-ci.${GITHUB_RUN_NUMBER}"
-            CODE="${GITHUB_RUN_NUMBER}"
+            NAME="1.2.0-ci.${GITHUB_RUN_NUMBER}"
+            CODE="$((GITHUB_RUN_NUMBER + 100))"
           fi
           echo "name=${NAME}" >> "$GITHUB_OUTPUT"
           echo "code=${CODE}" >> "$GITHUB_OUTPUT"
@@ -112,7 +112,8 @@ jobs:
             echo "has=true" >> "$GITHUB_OUTPUT"
           else
             echo "has=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::KEYSTORE_BASE64 belum diisi, release APK bakal ditandatangani pakai debug key."
+            echo "::error::Release signing secrets belum tersedia. Tidak menerbitkan APK dengan debug key."
+            exit 1
           fi
 
       - name: Decode keystore ke file (gitignored)
@@ -122,7 +123,16 @@ jobs:
         run: |
           echo "$KEYSTORE_BASE64" | base64 -d > release.keystore
           chmod 600 release.keystore
-          ls -l release.keystore
+
+      - name: Validate release signing secrets
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          test -n "$KEYSTORE_PASSWORD" && test -n "$KEY_ALIAS" && test -n "$KEY_PASSWORD" || {
+            echo "::error::Signing password/alias belum lengkap"; exit 1;
+          }
 
       - name: Unit test
         run: ./gradlew --no-daemon testDebugUnitTest --stacktrace

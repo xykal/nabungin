@@ -54,18 +54,18 @@ private val LightColors = NabunginColors(
 )
 
 private val DarkColors = NabunginColors(
-    background = Color(0xFF0D0F11),
-    surface = Color(0xFF16191C),
-    surfaceAlt = Color(0xFF1F2327),
-    onSurface = Color(0xFFEDEBE7),
-    muted = Color(0xFF9AA1A6),
-    hairline = Color(0xFF2A2F34),
-    accent = Color(0xFF7FC1A0),
-    accentInk = Color(0xFF07130D),
-    accentSoft = Color(0xFF1B2A23),
-    danger = Color(0xFFE08170),
-    warning = Color(0xFFD8AC5E),
-    scrim = Color(0xCC000000),
+    background = Color(0xFF101A17),
+    surface = Color(0xFF192721),
+    surfaceAlt = Color(0xFF24372E),
+    onSurface = Color(0xFFF5F3EB),
+    muted = Color(0xFFBAC8BE),
+    hairline = Color(0xFF385044),
+    accent = Color(0xFF9CDBB3),
+    accentInk = Color(0xFF102017),
+    accentSoft = Color(0xFF274838),
+    danger = Color(0xFFFFA28D),
+    warning = Color(0xFFF1C874),
+    scrim = Color(0xDD07120D),
 )
 
 /** Warna aksen pilihan user untuk tiap tujuan. Sengaja earthy, bukan neon. */

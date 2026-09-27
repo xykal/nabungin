@@ -1,6 +1,12 @@
 package dev.xykal.nabungin.ui.goal
 
 import android.app.DatePickerDialog
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import dev.xykal.nabungin.data.local.GoalPhoto
+import dev.xykal.nabungin.ui.components.GoalArtwork
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -66,6 +72,20 @@ fun GoalEditScreen(
 ) {
     val colors = LocalNabunginColors.current
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var error by remember { mutableStateOf<String?>(null) }
+
+    var photoBase64 by remember { mutableStateOf("") }
+    var photoBusy by remember { mutableStateOf(false) }
+    val photoPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        if (uri != null) scope.launch {
+            photoBusy = true
+            runCatching { GoalPhoto.import(context, uri) }
+                .onSuccess { photoBase64 = it; error = null }
+                .onFailure { error = it.message ?: "Gambar gagal dibaca" }
+            photoBusy = false
+        }
+    }
     val vm = appViewModel { GoalEditViewModel(it) }
 
     var loaded by remember { mutableStateOf(goalId <= 0L) }
@@ -83,7 +103,6 @@ fun GoalEditScreen(
     var ruleInterval by remember { mutableStateOf(SaveInterval.DAILY) }
     var ruleHour by remember { mutableStateOf(20) }
     var showRuleSheet by remember { mutableStateOf(false) }
-    var error by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(goalId) {
         if (goalId > 0L) {
@@ -96,6 +115,7 @@ fun GoalEditScreen(
                 deadline = goal.deadline
                 accentIndex = goal.accentIndex
                 iconKey = goal.iconKey
+                photoBase64 = goal.photoBase64
                 category = goal.category
             }
             val rule = vm.loadRule(goalId)
@@ -233,6 +253,20 @@ fun GoalEditScreen(
         }
         Spacer(Modifier.height(18.dp))
 
+        SectionHeader(title = "Gambar tujuan")
+        Spacer(Modifier.height(8.dp))
+        GoalArtwork(photoBase64)
+        Spacer(Modifier.height(8.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            NButton("Pilih gambar", onClick = { photoPicker.launch("image/*") },
+                modifier = Modifier.weight(1f), tone = ButtonTone.Quiet, enabled = !photoBusy)
+            if (photoBase64.isNotBlank()) NButton("Hapus gambar", onClick = { photoBase64 = "" },
+                modifier = Modifier.weight(1f), tone = ButtonTone.Ghost)
+        }
+        Text("Foto disimpan offline dan ikut dalam file backup. Maksimal 12 MB.",
+            style = MaterialTheme.typography.bodySmall, color = colors.muted)
+        Spacer(Modifier.height(18.dp))
+
         SectionHeader(title = "Warna")
         Spacer(Modifier.height(10.dp))
         SwatchRow(colors = GoalAccents, selectedIndex = accentIndex, onSelect = { accentIndex = it })
@@ -348,6 +382,7 @@ fun GoalEditScreen(
                             category = category,
                             purpose = purpose.trim(),
                             dailyPlan = dailyPlan,
+                            photoBase64 = photoBase64,
                         )
                         val rule = if (ruleEnabled && Money.parseDigits(ruleAmountDigits) > 0L) {
                             AutoRule(
@@ -365,7 +400,7 @@ fun GoalEditScreen(
                     }
                 }
             },
-            enabled = loaded,
+            enabled = loaded && !photoBusy,
             icon = AppIcons.Check,
         )
         Spacer(Modifier.height(10.dp))
