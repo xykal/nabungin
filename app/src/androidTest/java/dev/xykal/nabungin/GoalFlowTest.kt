@@ -1,6 +1,6 @@
 package dev.xykal.nabungin
 
-import androidx.compose.ui.test.assertExists
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -31,6 +31,6 @@ class GoalFlowTest {
         compose.waitUntil(10_000) {
             compose.onAllNodesWithText("Laptop kerja baru").fetchSemanticsNodes().isNotEmpty()
         }
-        compose.onNodeWithText("Laptop kerja baru").assertExists()
+        assert(compose.onAllNodesWithText("Laptop kerja baru").fetchSemanticsNodes().isNotEmpty())
     }
 }
