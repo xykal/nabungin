@@ -151,7 +151,7 @@ fun GoalDetailScreen(
         NabunginCard(padding = PaddingValues(18.dp)) {
             LabelValueRow("Sisa ke target", Money.format(current.remaining))
             LabelValueRow("Rencana harian", if (current.dailyPlan > 0L) "${Money.format(current.dailyPlan)}/hari" else "Belum diatur")
-            if (forecast != null) LabelValueRow("Tercapai kalau rutin", Dates.full(forecast), colors.accent)
+            if (forecast != null) LabelValueRow("Tercapai kalau rutin", Dates.full(forecast), valueColor = colors.accent)
             LabelValueRow(
                 label = "Perlu nabung",
                 value = if (pace.dailyNeeded > 0L) "${Money.format(pace.dailyNeeded)}/hari" else "-",
