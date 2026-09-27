@@ -135,7 +135,7 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: ./gradlew --no-daemon assembleDebug assembleRelease --stacktrace
+        run: ./gradlew --no-daemon assembleDebug assembleRelease assembleDebugAndroidTest --stacktrace
 
       - name: Bersihin keystore dari runner
         if: always()
@@ -162,7 +162,9 @@ jobs:
           profile: pixel_6
           disable-animations: true
           emulator-boot-timeout: 600
-          script: bash scripts/smoke-android.sh
+          script: |
+            bash scripts/smoke-android.sh
+            ./gradlew --no-daemon connectedDebugAndroidTest --stacktrace
 
       - name: Upload emulator logcat on failure
         if: failure()

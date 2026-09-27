@@ -59,6 +59,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -373,6 +374,7 @@ fun NabunginTextField(
     keyboardType: KeyboardType = KeyboardType.Text,
     singleLine: Boolean = true,
     maxChars: Int = 60,
+    testTag: String = "",
 ) {
     val colors = LocalNabunginColors.current
     val interactionSource = remember { MutableInteractionSource() }
@@ -398,7 +400,7 @@ fun NabunginTextField(
             cursorBrush = SolidColor(colors.accent),
             keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
             interactionSource = interactionSource,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().then(if (testTag.isNotBlank()) Modifier.testTag(testTag) else Modifier),
         )
     }
 }

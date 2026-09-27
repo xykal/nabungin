@@ -2,6 +2,7 @@ package dev.xykal.nabungin.ui.goal
 
 import android.app.DatePickerDialog
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.testTag
 import dev.xykal.nabungin.core.appViewModel
 import dev.xykal.nabungin.domain.SavingsMath
 import dev.xykal.nabungin.domain.format.Dates
@@ -137,6 +139,7 @@ fun GoalEditScreen(
             value = name,
             onValueChange = { name = it },
             placeholder = "Misal: Laptop baru / Dana darurat",
+            testTag = "goal-name",
         )
         Spacer(Modifier.height(14.dp))
         SectionHeader(title = "Alasan & cerita (opsional)")
@@ -160,7 +163,8 @@ fun GoalEditScreen(
 
         SectionHeader(title = "Deadline")
         Spacer(Modifier.height(8.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())) {
             Chip("Tanpa deadline", deadline == null) { deadline = null }
             listOf(1L, 3L, 6L, 12L).forEach { months ->
                 val candidate = LocalDate.now().plusMonths(months)
@@ -325,6 +329,7 @@ fun GoalEditScreen(
         Spacer(Modifier.height(24.dp))
         NButton(
             text = if (goalId > 0L) "Simpan perubahan" else "Buat tabungan",
+            modifier = Modifier.testTag("save-goal"),
             onClick = {
                 when {
                     name.isBlank() -> error = "Nama tujuan wajib diisi"
