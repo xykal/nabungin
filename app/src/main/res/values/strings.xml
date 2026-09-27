@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Nabungin</string>
+    <string name="channel_reminder_name">Pengingat Nabung</string>
+    <string name="channel_reminder_desc">Pengingat harian dan laporan auto-save</string>
+</resources>

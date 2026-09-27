@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Nabungin - UI Preview (Kotlin + Jetpack Compose)</title>
+<style>
+  :root{
+    --paper:#F6F3EE; --surface:#FCFBF8; --surface-alt:#EFEAE1; --ink:#101418;
+    --muted:#6E6A63; --line:#E0DAD0; --accent:#2E6B4F; --accent-soft:#DCE9E1;
+    --danger:#B4432F; --warning:#9A6B12; --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:#DED9D0;color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:1120px;margin:0 auto;padding:32px 20px 60px}
+  .head{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-content:space-between;margin-bottom:22px}
+  .head h1{margin:0;font-size:26px;letter-spacing:-.6px}
+  .head p{margin:6px 0 0;color:#5d594f;font-size:13.5px;max-width:620px;line-height:1.55}
+  .tag{display:inline-block;font-size:11px;letter-spacing:.8px;text-transform:uppercase;
+    border:1px solid #c9c3b8;border-radius:999px;padding:5px 10px;color:#5d594f;background:#EFEAE1}
+  .stage{display:grid;grid-template-columns:400px 1fr;gap:28px;align-items:start}
+  @media (max-width:900px){.stage{grid-template-columns:1fr}}
+  .phone{width:400px;max-width:100%;background:var(--paper);border:1px solid #cdc7bc;border-radius:34px;
+    padding:14px;box-shadow:0 18px 40px rgba(16,20,24,.16)}
+  .screen{background:var(--paper);border-radius:26px;overflow:hidden;height:760px;display:flex;flex-direction:column}
+  .statusbar{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);padding:12px 18px 4px}
+  .body{flex:1;overflow-y:auto;padding:6px 18px 90px}
+  .brandrow{display:flex;align-items:center;justify-content:space-between;margin-top:6px}
+  .kicker{font-size:11px;letter-spacing:1.1px;text-transform:uppercase;color:var(--muted)}
+  .h1{font-size:34px;letter-spacing:-1px;font-weight:600;margin:2px 0 0;font-family:var(--mono)}
+  .sub{font-size:12px;color:var(--muted);margin-top:2px}
+  .iconbtn{width:40px;height:40px;border-radius:12px;background:var(--surface-alt);border:0;
+    display:grid;place-items:center;cursor:pointer}
+  .iconbtn svg{width:18px;height:18px;stroke:var(--ink);fill:none;stroke-width:1.7;stroke-linecap:round}
+  .row{display:flex;align-items:center;gap:10px}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px}
+  .stat .k{font-size:10.5px;letter-spacing:.9px;text-transform:uppercase;color:var(--muted)}
+  .stat .v{font-size:16px;font-weight:600;margin-top:4px}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:16px;margin-top:12px}
+  .card .k{font-size:10.5px;letter-spacing:.9px;text-transform:uppercase;color:var(--muted)}
+  .bar-chart{display:flex;align-items:flex-end;gap:3px;height:86px;margin-top:12px}
+  .bar-chart i{flex:1;background:var(--accent);border-radius:3px;display:block;min-height:2px}
+  .bar-chart i.zero{background:var(--line)}
+  .goal{display:flex;gap:12px;align-items:center}
+  .bubble{width:38px;height:38px;border-radius:19px;display:grid;place-items:center;flex:0 0 auto}
+  .bubble svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+  .goal .name{font-size:15.5px;font-weight:600;letter-spacing:-.2px}
+  .goal .meta{font-size:11.5px;color:var(--muted);margin-top:2px}
+  .goal .amt{font-family:var(--mono);font-size:14px;font-weight:600;text-align:right}
+  .goal .of{font-size:11px;color:var(--muted);text-align:right}
+  .ring{width:52px;height:52px;flex:0 0 auto;position:relative}
+  .ring svg{transform:rotate(-90deg)}
+  .ring .pct{position:absolute;inset:0;display:grid;place-items:center;font-size:10.5px;font-weight:600}
+  .btn{border:0;border-radius:14px;padding:13px 16px;font-size:14px;font-weight:600;cursor:pointer;width:100%}
+  .btn.primary{background:var(--accent);color:#F4FBF7}
+  .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+  .btn.quiet{background:var(--surface-alt);color:var(--ink)}
+  .btn.sm{width:auto;padding:9px 14px;font-size:12.5px;border-radius:12px}
+  .chipbar{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-top:10px}
+  .chip{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 13px;
+    font-size:12.5px;color:var(--ink);white-space:nowrap;cursor:pointer}
+  .chip.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:600}
+  .divider{height:1px;background:var(--line);margin:10px 0}
+  .nav{display:flex;gap:6px;background:var(--surface);border-radius:18px;padding:8px;margin:0 14px 12px;
+    border:1px solid var(--line)}
+  .nav button{flex:1;border:0;background:transparent;padding:8px 0;border-radius:12px;cursor:pointer;color:var(--muted)}
+  .nav button.on{background:var(--accent-soft);color:var(--accent)}
+  .nav .lbl{font-size:10.5px;letter-spacing:.6px;text-transform:uppercase;font-weight:600;margin-top:2px}
+  .sheetwrap{position:absolute;inset:0;background:rgba(16,20,24,.55);display:none;align-items:flex-end;
+    border-radius:26px;overflow:hidden}
+  .sheetwrap.on{display:flex}
+  .sheet{background:var(--paper);border-radius:26px 26px 0 0;width:100%;padding:18px;max-height:88%;overflow-y:auto}
+  .sheet h2{margin:0;font-size:22px;letter-spacing:-.4px}
+  .amount{font-family:var(--mono);font-size:34px;font-weight:600;margin:8px 0 2px}
+  .keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+  .keypad button{height:46px;border-radius:14px;border:1px solid var(--line);background:var(--surface);
+    font-family:var(--mono);font-size:17px;cursor:pointer}
+  .keypad button:active{background:var(--accent-soft)}
+  .ledger{display:flex;align-items:center;gap:10px;padding:8px 0}
+  .ledger .t{font-size:14.5px}
+  .ledger .d{font-size:11.5px;color:var(--muted)}
+  .ledger .a{font-family:var(--mono);font-size:13.5px;font-weight:600;margin-left:auto}
+  .badge{font-size:9.5px;letter-spacing:.8px;text-transform:uppercase;border-radius:6px;padding:3px 6px;
+    background:var(--accent-soft);color:var(--accent);font-weight:700}
+  .badge.manual{background:var(--surface-alt);color:var(--muted)}
+  .legend{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:20px}
+  .legend h3{margin:0 0 10px;font-size:15px;letter-spacing:-.2px}
+  .legend ul{margin:0;padding-left:18px;color:#5d594f;font-size:13px;line-height:1.7}
+  .legend code{background:var(--surface-alt);border-radius:5px;padding:1px 5px;font-size:12px}
+  .legend .block{margin-top:18px}
+  .swatches{display:flex;gap:8px;margin-top:10px}
+  .swatches span{width:26px;height:26px;border-radius:9px;display:block}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <div>
+      <span class="tag">Kotlin + Jetpack Compose / offline-first</span>
+      <h1>Nabungin - preview UI</h1>
+      <p>Ini mockup interaktif dari layar asli Compose: palet kertas hangat, hairline border, angka monospace, tanpa komponen default OS. Coba tap <strong>Setor</strong>, <strong>keypad</strong>, dan tab di bawah.</p>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="phone">
+      <div class="screen" id="screen" style="position:relative">
+        <div class="statusbar"><span>09:41</span><span>Nabungin</span></div>
+        <div class="body" id="viewport"></div>
+        <div class="nav" id="nav"></div>
+        <div class="sheetwrap" id="sheet"><div class="sheet" id="sheetBody"></div></div>
+      </div>
+    </div>
+
+    <div class="legend">
+      <h3>Yang beneran jalan di app</h3>
+      <ul>
+        <li>Room + Flow: 3 tabel (<code>goals</code>, <code>deposits</code>, <code>auto_rules</code>) dengan <code>ON DELETE CASCADE</code></li>
+        <li>WorkManager: periodic auto-save tiap jam + pengingat harian pada jam pilihan user</li>
+        <li>Kunci aplikasi: PIN 6 digit (PBKDF2-HMAC-SHA256, 120k iterasi, salt 128-bit) + BiometricPrompt</li>
+        <li>Backup JSON lewat Storage Access Framework, tanpa server</li>
+        <li>Statistik: pace harian, ETA per tujuan, streak, grafik 30 hari (Canvas sendiri)</li>
+        <li>Unit test JVM untuk Money/Date/SavingsMath, ikut jalan di CI sebelum APK di-assemble</li>
+      </ul>
+      <div class="block">
+        <h3>Build &amp; distribusi</h3>
+        <ul>
+          <li>GitHub Actions: <code>build.yml</code> jalanin <code>testDebugUnitTest</code>, <code>assembleDebug</code>, <code>assembleRelease</code></li>
+          <li>APK di-upload sebagai artifact + SHA256SUMS, tag <code>v*</code> otomatis bikin GitHub Release</li>
+          <li>Keystore diambil dari <code>secrets.KEYSTORE_BASE64</code>, tidak pernah ditulis ke repo</li>
+        </ul>
+      </div>
+      <div class="block">
+        <h3>Palet</h3>
+        <div class="swatches">
+          <span style="background:#2E6B4F"></span>
+          <span style="background:#C4553B"></span>
+          <span style="background:#3C5A99"></span>
+          <span style="background:#B98A17"></span>
+          <span style="background:#7A4A6B"></span>
+          <span style="background:#1F7A8C"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const rupiah = n => "Rp " + n.toLocaleString("id-ID");
+const compacto = n => n >= 1e9 ? (n/1e9).toFixed(1).replace(".",",")+" M"
+  : n >= 1e6 ? (n/1e6).toFixed(1).replace(".",",")+" jt"
+  : n >= 1e3 ? Math.round(n/1e3)+" rb" : n.toString();
+
+let state = {
+  screen: "home",
+  goals: [
+    {id:1, name:"Dana Darurat", cat:"Darurat", target:10000000, saved:3250000, icon:"shield", accent:"#2E6B4F", deadline:"Des 2026"},
+    {id:2, name:"MacBook Air M5", cat:"Gadget", target:24000000, saved:5450000, icon:"coins", accent:"#3C5A99", deadline:"Jun 2027"},
+    {id:3, name:"Trip Jepang", cat:"Liburan", target:18000000, saved:1200000, icon:"plane", accent:"#C4553B", deadline:"Mar 2027"}
+  ],
+  deposits: [
+    {goal:"Dana Darurat", amount:250000, day:"Hari ini", auto:false, note:"Sisa uang makan"},
+    {goal:"MacBook Air M5", amount:500000, day:"Hari ini", auto:true, note:"Auto-save harian"},
+    {goal:"Trip Jepang", amount:150000, day:"Kemarin", auto:false, note:"Koin receh"},
+    {goal:"Dana Darurat", amount:300000, day:"Kemarin", auto:true, note:"Auto-save harian"}
+  ]
+};
+
+const ic = {
+  coins:'<path d="M5 8h14M5 12h14M6 4h12"/>',
+  shield:'<path d="M12 3l7 3v5c0 4-3 7.3-7 8.8C8 18.3 5 15 5 11V6z"/>',
+  plane:'<path d="M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"/>',
+  chart:'<path d="M6 18V11M12 18V6M18 18v-5"/>',
+  list:'<path d="M7 6h11M7 12h11M7 18h11M4 6h.01M4 12h.01M4 18h.01"/>',
+  gear:'<path d="M5 7h14M5 12h14M5 17h14"/>',
+  lock:'<path d="M8 11V8.5a4 4 0 018 0V11"/><path d="M6 11h12v9H6z"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  clock:'<path d="M12 21a9 9 0 100-18 9 9 0 000 18z"/><path d="M12 7v5l3.5 2"/>'
+};
+
+function ring(pct, size, stroke, color){
+  const r = (size-stroke)/2, c = 2*Math.PI*r;
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="#EFEAE1" stroke-width="${stroke}"/>
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${color}" stroke-width="${stroke}"
+      stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${c*(1-pct/100)}"/>
+  </svg>`;
+}
+
+function bars(){
+  const seed=[0,0,1,0,1,1,0,1,0,0,1,1,0,1,0,1,1,0,1,1,0,0,1,1,0,1,1,0,1,1];
+  return seed.map((v,i)=>`<i class="${v?"":"zero"}" style="height:${v?20+((i*13)%62):3}%"></i>`).join("");
+}
+
+function header(){
+  const total = state.goals.reduce((a,g)=>a+g.saved,0), target = state.goals.reduce((a,g)=>a+g.target,0);
+  const todayTotal = state.deposits.filter(d=>d.day==="Hari ini").reduce((a,d)=>a+d.amount,0);
+  return `
+  <div class="brandrow">
+    <div>
+      <div class="kicker">Nabungin</div>
+      <div class="sub">Tabungan lu hari ini</div>
+    </div>
+    <button class="iconbtn" title="Setelan">${svgIcon("gear")}</button>
+  </div>
+  <div class="row" style="align-items:flex-end;margin-top:18px">
+    <div style="flex:1">
+      <div class="kicker">Total terkumpul</div>
+      <div class="h1">${rupiah(total)}</div>
+      <div class="sub">dari target ${rupiah(target)} di ${state.goals.length} tujuan</div>
+    </div>
+    <div class="ring" style="width:66px;height:66px">
+      ${ring(Math.round(total/target*100),66,7,"#2E6B4F")}
+      <div class="pct">${Math.round(total/target*100)}%</div>
+    </div>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="k">Hari ini</div><div class="v">${compacto(todayTotal)}</div></div>
+    <div class="stat"><div class="k">Bulan ini</div><div class="v">${compacto(state.deposits.reduce((a,d)=>a+d.amount,0))}</div></div>
+    <div class="stat"><div class="k">Streak</div><div class="v" style="color:var(--accent)">4 hari</div></div>
+  </div>
+  <div class="card">
+    <div class="k">30 hari terakhir</div>
+    <div class="bar-chart">${bars()}</div>
+    <div class="sub" style="margin-top:8px">Total ${rupiah(4125000)} masuk dalam 30 hari</div>
+  </div>
+  <div class="kicker" style="margin-top:22px">Tujuan tabungan</div>`;
+}
+
+function goalCard(g){
+  const pct = Math.round(g.saved/g.target*100);
+  return `<div class="card">
+    <div class="goal">
+      <div class="bubble" style="background:${g.accent}22;color:${g.accent}">${svgIcon(g.icon)}</div>
+      <div style="flex:1">
+        <div class="name">${g.name}</div>
+        <div class="meta">${g.cat} · ${pct}% · ${g.deadline}</div>
+      </div>
+      <div>
+        <div class="amt" style="color:${g.accent}">${rupiah(g.saved)}</div>
+        <div class="of">dari ${compacto(g.target)}</div>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="row">
+      <div class="ring">${ring(pct,52,6,g.accent)}<div class="pct">${pct}</div></div>
+      <div style="flex:1">
+        <div style="font-size:13.5px">Kurang ${rupiah(g.target-g.saved)}</div>
+        <div class="sub">${g.deadline==="Des 2026"?"6 bulan lagi":"On track"}</div>
+      </div>
+      <button class="btn ghost sm" onclick="openSheet(${g.id})">Setor</button>
+    </div>
+  </div>`;
+}
+
+function home(){
+  return header() + state.goals.map(goalCard).join("");
+}
+
+function detail(){
+  const g = state.goals[0], pct = Math.round(g.saved/g.target*100);
+  const perDay = Math.ceil((g.target-g.saved)/180);
+  return `
+  <div class="brandrow">
+    <button class="iconbtn" onclick="go('home')">${svgIcon("list")}</button>
+    <div style="flex:1;margin-left:12px;font-weight:600">${g.name}</div>
+    <button class="iconbtn">${svgIcon("gear")}</button>
+  </div>
+  <div style="display:grid;place-items:center;margin-top:22px">
+    <div class="ring" style="width:168px;height:168px">${ring(pct,168,14,g.accent)}<div class="pct" style="font-size:26px">${pct}%</div></div>
+    <div class="amt" style="font-size:20px;margin-top:14px">${rupiah(g.saved)}</div>
+    <div class="sub">dari target ${rupiah(g.target)}</div>
+  </div>
+  <div class="card">
+    ${[["Sisa ke target",rupiah(g.target-g.saved)],["Perlu nabung",rupiah(perDay)+"/hari"],["Deadline",g.deadline],["Estimasi tercapai",'18 Mei 2027'],["Rata-rata harian",rupiah(108000)]]
+      .map(([k,v])=>`<div class="row" style="justify-content:space-between;padding:6px 0"><span class="sub">${k}</span><span style="font-size:14px">${v}</span></div>`).join("")}
+  </div>
+  <div class="kicker" style="margin-top:20px">Auto-save</div>
+  <div class="card">
+    <div class="row">
+      <div class="bubble" style="background:var(--accent-soft);color:var(--accent)">${svgIcon("clock")}</div>
+      <div style="flex:1">
+        <div style="font-weight:600">Jalan otomatis</div>
+        <div class="sub">${rupiah(100000)} · Harian · 20:00</div>
+      </div>
+      <span class="badge">Aktif</span>
+    </div>
+  </div>
+  <div class="kicker" style="margin-top:20px">Riwayat setoran</div>
+  <div class="card">${ledgerRows()}</div>
+  <div style="margin-top:14px"><button class="btn primary" onclick="openSheet(${g.id})">+ Setor sekarang</button></div>
+  <div style="margin-top:10px"><button class="btn ghost" onclick="go('home')">Balik ke beranda</button></div>`;
+}
+
+function ledgerRows(){
+  return state.deposits.map(d=>`<div class="ledger">
+    <div><div class="t">${d.note}</div><div class="d">${d.day} · ${d.goal}</div></div>
+    <span class="badge ${d.auto?"":"manual"}">${d.auto?"Auto":"Manual"}</span>
+    <span class="a">+${rupiah(d.amount)}</span>
+  </div>`).join("");
+}
+
+function history(){
+  const groups = {};
+  state.deposits.forEach(d=>{ (groups[d.day] = groups[d.day] || []).push(d); });
+  return `<div class="kicker">Riwayat</div>
+  <div style="font-size:24px;font-weight:600;letter-spacing:-.5px;margin-top:4px">Bulan ini ${rupiah(1200000)}</div>
+  <div class="sub" style="margin-bottom:14px">${state.deposits.length} setoran tercatat</div>
+  <div class="chipbar">${["Semua","Dana Darurat","MacBook Air M5","Trip Jepang"].map((c,i)=>`<button class="chip ${i===0?"on":""}">${c}</button>`).join("")}</div>
+  ${Object.keys(groups).map(day=>`<div class="card">
+    <div class="row" style="justify-content:space-between">
+      <div><div style="font-weight:600">${day}</div><div class="sub">2026</div></div>
+      <div class="amt">${rupiah(groups[day].reduce((a,d)=>a+d.amount,0))}</div>
+    </div>
+    <div class="divider"></div>
+    ${groups[day].map(d=>`<div class="ledger"><div><div class="t">${d.goal}</div><div class="d">${d.note}</div></div>
+      ${d.auto?'<span class="badge">Auto</span>':''}<span class="a">${rupiah(d.amount)}</span></div>`).join("")}
+  </div>`).join("")}`;
+}
+
+function settings(){
+  return `<div class="kicker" style="margin-top:6px">Setelan</div>
+  <div class="kicker" style="margin-top:18px">Tampilan</div>
+  <div class="chipbar"><button class="chip">Sistem</button><button class="chip on">Terang</button><button class="chip">Gelap</button></div>
+  <div class="kicker" style="margin-top:22px">Pengingat harian</div>
+  <div class="card">
+    <div class="row">
+      <div class="bubble" style="background:var(--accent-soft);color:var(--accent)">${svgIcon("clock")}</div>
+      <div style="flex:1"><div style="font-weight:600">Pengingat aktif</div><div class="sub">Notifikasi tiap hari jam 20:00</div></div>
+      <button class="chip on" style="border:0">Aktif</button>
+    </div>
+    <div class="chipbar">${["06:00","09:00","12:00","18:00","20:00","21:00"].map(t=>`<button class="chip ${t==="20:00"?"on":""}">${t}</button>`).join("")}</div>
+  </div>
+  <div class="kicker" style="margin-top:22px">Keamanan</div>
+  <div class="card">
+    <div class="row">
+      <div class="bubble" style="background:var(--accent-soft);color:var(--accent)">${svgIcon("lock")}</div>
+      <div style="flex:1"><div style="font-weight:600">Kunci aplikasi aktif</div><div class="sub">PIN 6 digit + biometrik opsional</div></div>
+    </div>
+    <div style="margin-top:12px"><button class="btn quiet">Ganti PIN</button></div>
+    <div style="margin-top:8px"><button class="btn ghost">Matikan kunci aplikasi</button></div>
+  </div>
+  <div class="kicker" style="margin-top:22px">Data</div>
+  <div class="card">
+    <div class="row" style="justify-content:space-between"><span class="sub">Total data lokal</span><span style="font-size:14px">Room + DataStore</span></div>
+    <div style="margin-top:12px"><button class="btn quiet">Export backup (JSON)</button></div>
+    <div style="margin-top:8px"><button class="btn quiet">Import backup</button></div>
+    <div style="margin-top:8px"><button class="btn" style="background:#B4432F1f;color:var(--danger)">Hapus semua data</button></div>
+  </div>
+  <div class="card"><div class="sub">Versi 1.0.0 · dev.xykal.nabungin · Release</div>
+  <div class="sub" style="margin-top:4px">Semua data disimpen di HP lu. Nggak ada server, nggak ada tracking.</div></div>`;
+}
+
+function svgIcon(k){
+  return `<svg viewBox="0 0 24 24">${ic[k]||ic.coins}</svg>`;
+}
+
+const tabs = [["home","Beranda","coins"],["detail","Tujuan","shield"],["history","Riwayat","list"],["settings","Setelan","lock"]];
+
+function render(){
+  const v = document.getElementById("viewport");
+  const s = state.screen;
+  v.innerHTML = s==="home"?home(): s==="detail"?detail(): s==="history"?history():settings();
+  document.getElementById("nav").innerHTML = tabs.map(([id,label])=>
+    `<button class="${s===id?"on":""}" onclick="go('${id}')">${svgIcon(id==="detail"?"shield":id==="settings"?"lock":id==="history"?"list":"coins")}
+      <div class="lbl">${label}</div></button>`).join("");
+  v.scrollTop = 0;
+}
+
+function go(screen){ state.screen = screen; render(); }
+
+let sheetState = { goalId: 1, digits: "", note: "" };
+
+function openSheet(goalId){
+  sheetState = { goalId, digits:"", note:"" };
+  document.getElementById("sheet").classList.add("on");
+  drawSheet();
+}
+
+function closeSheet(){ document.getElementById("sheet").classList.remove("on"); }
+
+function drawSheet(){
+  const g = state.goals.find(x=>x.id===sheetState.goalId);
+  const amount = Number(sheetState.digits || 0);
+  const body = document.getElementById("sheetBody");
+  body.innerHTML = `
+    <div class="row" style="justify-content:space-between;align-items:flex-start">
+      <div><h2>Setor tabungan</h2><div class="sub">${g.name}</div></div>
+      <button class="iconbtn" onclick="closeSheet()" style="font-size:16px">×</button>
+    </div>
+    <div class="kicker" style="margin-top:18px">Nominal</div>
+    <div class="amount">${rupiah(amount)}</div>
+    <div class="sub">Sisa target ${rupiah(g.target-g.saved)}</div>
+    <div class="chipbar">
+      ${[10000,25000,50000,100000,250000,500000].map(v=>`<button class="chip" onclick="quick(${v})">${compacto(v)}</button>`).join("")}
+      <button class="chip" onclick="quick(${g.target-g.saved})">Isi sisa</button>
+    </div>
+    <div class="chipbar"><button class="chip on">Hari ini</button><button class="chip">Kemarin</button></div>
+    <div class="keypad">
+      ${[1,2,3,4,5,6,7,8,9].map(n=>`<button onclick="press('${n}')">${n}</button>`).join("")}
+      <button style="visibility:hidden"></button>
+      <button onclick="press('0')">0</button>
+      <button onclick="backspace()">⌫</button>
+    </div>
+    <div style="margin-top:14px">
+      <button class="btn primary" ${amount<=0?"disabled style=opacity:.45":""} onclick="save()">
+        ${amount>0?`Setor ${rupiah(amount)}`:"Masukin nominal dulu"}
+      </button>
+    </div>`;
+}
+
+function press(d){ if(sheetState.digits.length<12) sheetState.digits += d; drawSheet(); }
+function backspace(){ sheetState.digits = sheetState.digits.slice(0,-1); drawSheet(); }
+function quick(v){ sheetState.digits = String(Number(sheetState.digits||0)+v); drawSheet(); }
+
+function save(){
+  const g = state.goals.find(x=>x.id===sheetState.goalId);
+  const amount = Number(sheetState.digits||0);
+  if(!amount) return;
+  g.saved += amount;
+  state.deposits.unshift({goal:g.name, amount, day:"Hari ini", auto:false, note:"Setoran dari preview"});
+  closeSheet();
+  render();
+}
+
+render();
+</script>
+</body>
+</html>

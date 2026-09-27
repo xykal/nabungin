@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ink">#0D0F11</color>
+    <color name="paper">#F6F3EE</color>
+    <color name="accent">#2E6B4F</color>
+    <color name="ic_launcher_bg">#101418</color>
+</resources>

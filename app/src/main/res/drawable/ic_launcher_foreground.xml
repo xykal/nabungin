@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Bespoke mark: three stacked coins + upward step, drawn on a 108 grid, safe zone 66dp -->
+    <path
+        android:fillColor="#F6F3EE"
+        android:pathData="M38,44 h32 a4,4 0 0 1 4,4 v4 a4,4 0 0 1 -4,4 h-32 a4,4 0 0 1 -4,-4 v-4 a4,4 0 0 1 4,-4 z" />
+    <path
+        android:fillColor="#2E6B4F"
+        android:pathData="M38,34 h32 a4,4 0 0 1 4,4 v4 a4,4 0 0 1 -4,4 h-32 a4,4 0 0 1 -4,-4 v-4 a4,4 0 0 1 4,-4 z" />
+    <path
+        android:fillColor="#F6F3EE"
+        android:pathData="M38,54 h32 a4,4 0 0 1 4,4 v4 a4,4 0 0 1 -4,4 h-32 a4,4 0 0 1 -4,-4 v-4 a4,4 0 0 1 4,-4 z" />
+    <path
+        android:fillColor="#C4553B"
+        android:pathData="M50,24 h8 v10 h-8 z" />
+</vector>

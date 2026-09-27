@@ -1,0 +1,131 @@
+# Nabungin
+
+Offline-first savings app for Android. Native Kotlin + Jetpack Compose, Room, WorkManager, no server, no tracking.
+
+Aplikasi tabungan Android, offline-first. Kotlin + Jetpack Compose native, Room, WorkManager. Tanpa server, tanpa tracking.
+
+---
+
+## English
+
+### What it is
+
+Nabungin tracks savings goals and deposits entirely on-device. You create a goal (name, target amount, optional deadline, color, icon, category), log deposits, and the app computes the pace you need per day, an ETA for each goal, and a streak of consecutive saving days. Recurring rules let WorkManager deposit automatically on schedule, and an optional daily reminder nudges you when you skipped a day.
+
+### Feature set
+
+| Area | Detail |
+| --- | --- |
+| Goals | CRUD, target amount, deadline, 6 earthy accent colors, 10 custom vector icons, 6 categories |
+| Deposits | Manual entry with numeric keypad, quick-amount chips, backdated entry, notes, per-row delete |
+| Auto-save | Per-goal rule: amount + interval (daily/weekly/monthly) + execution hour, run by `AutoSaveWorker` |
+| Reminders | Daily notification at a user-picked time, content adapts to streak and today's deposits |
+| Stats | Total saved, month total, 30-day bar chart, active days, average per active day, per-goal ETA ranking |
+| Security | 6-digit PIN (PBKDF2-HMAC-SHA256, 120k iterations, 128-bit salt), BiometricPrompt, auto re-lock on background |
+| Backup | JSON export/import through the Storage Access Framework |
+| Design | Custom design system: no Material defaults, flat cards with hairline borders, monospace numerals, Canvas-drawn rings and charts |
+
+### Stack (2026 stable line)
+
+- Kotlin 2.2.21, AGP 8.13.2, Gradle 8.14.3, JDK 17
+- Compose BOM 2025.11.01 + Kotlin Compose compiler plugin
+- Room 2.8.2 (KSP 2.2.21-2.0.5), WorkManager 2.10.5, DataStore 1.1.7, Biometric 1.1.0
+- kotlinx-serialization 1.9.0 for backup format
+- minSdk 26, target/compileSdk 36, R8 minify + resource shrinking on release
+
+### Architecture
+
+Single Gradle module, layered packages: `domain` (pure Kotlin, unit-tested), `data` (Room + DataStore + repository), `security`, `work`, `notify`, `ui` (theme, components, feature screens). Manual DI via `AppContainer` created in `NabunginApp` — no reflection, no annotation-processing cost at startup beyond Room's KSP output.
+
+Read `docs/ARCHITECTURE.md` for the data model and threading rules, `docs/PRD.md` for scope and roadmap.
+
+### Build
+
+Build happens on GitHub Actions, nothing runs locally:
+
+```
+Actions -> Build APK -> Run workflow
+```
+
+The workflow runs `testDebugUnitTest`, `assembleDebug`, and `assembleRelease`, then uploads both APKs plus `SHA256SUMS.txt` as artifacts. Pushing a `v*` tag (or enabling "create_release") publishes a GitHub Release with the APKs attached.
+
+Release signing reads these repository secrets (see `docs/GITHUB_SECRETS.md`):
+
+- `KEYSTORE_BASE64`
+- `KEYSTORE_PASSWORD`
+- `KEY_ALIAS`
+- `KEY_PASSWORD`
+
+If `KEYSTORE_BASE64` is absent the release APK is signed with the debug key so CI never blocks. Generate a real keystore with `scripts/gen-keystore.sh`.
+
+### Install
+
+```
+adb install -r Nabungin-<version>-release.apk
+```
+
+### Security notes
+
+- No network permission is declared. The APK cannot talk to the internet.
+- `android:allowBackup="false"`, cloud backup and device transfer are excluded.
+- PIN is never stored in plaintext; verification is constant-time.
+- Never commit keystores, `keystore.properties`, or token files. `.gitignore` already blocks them — if a token ever lands in a repository, rotate it immediately.
+
+---
+
+## Bahasa Indonesia
+
+### Ini apa
+
+Nabungin nyatet tujuan tabungan dan setoran, semuanya di dalam HP. Lu bikin tujuan (nama, target, deadline opsional, warna, ikon, kategori), catat setoran, lalu app ngitung kebutuhan nabung per hari, estimasi tanggal tercapai per tujuan, plus streak hari nabung beruntun. Ada aturan auto-save yang dijalanin WorkManager, dan pengingat harian buat hari yang kelewat.
+
+### Fitur
+
+| Bagian | Detail |
+| --- | --- |
+| Tujuan | CRUD, target nominal, deadline, 6 warna aksen earthy, 10 ikon vector bikinan sendiri, 6 kategori |
+| Setoran | Input manual pakai keypad numerik sendiri, chip nominal cepat, bisa backdate, catatan, hapus per baris |
+| Auto-save | Aturan per tujuan: nominal + interval (harian/mingguan/bulanan) + jam eksekusi, dijalankan `AutoSaveWorker` |
+| Pengingat | Notifikasi harian di jam pilihan user, isi pesan nyesuaikan streak dan setoran hari itu |
+| Statistik | Total terkumpul, total bulan ini, grafik 30 hari, hari aktif, rata-rata per hari aktif, peringkat ETA per tujuan |
+| Keamanan | PIN 6 digit (PBKDF2-HMAC-SHA256, 120k iterasi, salt 128-bit), BiometricPrompt, auto re-lock pas app ke background |
+| Backup | Export/import JSON lewat Storage Access Framework |
+| Desain | Design system sendiri: bukan komponen default Material, kartu flat border hairline, angka monospace, ring dan chart digambar pakai Canvas |
+
+### Cara build
+
+Build di GitHub Actions, nggak perlu setup lokal:
+
+```
+Actions -> Build APK -> Run workflow
+```
+
+Workflow jalanin `testDebugUnitTest`, `assembleDebug`, dan `assembleRelease`, lalu upload dua APK + `SHA256SUMS.txt` sebagai artifact. Push tag `v*` (atau centang "create_release") otomatis bikin GitHub Release dengan APK nempel.
+
+Signing release baca secrets repo ini:
+
+- `KEYSTORE_BASE64`
+- `KEYSTORE_PASSWORD`
+- `KEY_ALIAS`
+- `KEY_PASSWORD`
+
+Kalau `KEYSTORE_BASE64` kosong, APK release ditandatangani pakai debug key biar CI tetap jalan. Bikin keystore beneran pakai `scripts/gen-keystore.sh`.
+
+### Install
+
+```
+adb install -r Nabungin-<versi>-release.apk
+```
+
+### Catatan keamanan
+
+- Nggak ada permission internet di manifest. APK-nya nggak bisa keluar jaringan.
+- `android:allowBackup="false"`, cloud backup dan device transfer dikecualikan.
+- PIN nggak pernah disimpan plaintext, verifikasi pakai perbandingan constant-time.
+- Jangan pernah commit keystore, `keystore.properties`, atau file token. `.gitignore` sudah ngeblok semua itu — kalau ada token yang telanjur masuk repo, langsung rotate.
+
+---
+
+## License / Lisensi
+
+MIT. Lihat `LICENSE`.

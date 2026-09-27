@@ -1,0 +1,211 @@
+name: Build APK
+
+on:
+  push:
+    branches: [main, master]
+    tags: ["v*"]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+    inputs:
+      version_name:
+        description: "Override versionName (contoh: 1.2.0)"
+        type: string
+        required: false
+      create_release:
+        description: "Bikin GitHub Release dari build ini"
+        type: boolean
+        default: false
+      bump_version:
+        description: "Naikin versionName patch, commit, lalu push (pakai identitas xykal)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  JAVA_VERSION: "17"
+  GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false"
+
+jobs:
+  bump-version:
+    name: Bump version + push (xykal)
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.bump_version }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Konfigurasi identitas git xykal
+        run: |
+          git config --local user.name "xykal"
+          git config --local user.email "xykal@users.noreply.github.com"
+
+      - name: Naikin versionName (patch)
+        run: bash scripts/bump-version.sh patch
+
+      - name: Commit + push
+        run: |
+          git add app/build.gradle.kts
+          if git diff --cached --quiet; then
+            echo "Versi tidak berubah, skip commit."
+            exit 0
+          fi
+          NEW_VERSION=$(grep -oE '\?: "[0-9]+\.[0-9]+\.[0-9]+"' app/build.gradle.kts | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+          git commit -m "chore(release): bump versionName ke ${NEW_VERSION}"
+          git push origin HEAD:${GITHUB_REF_NAME}
+          echo "NEW_VERSION=${NEW_VERSION}" >> "$GITHUB_ENV"
+
+  build:
+    name: Assemble debug + release
+    runs-on: ubuntu-latest
+    outputs:
+      version_name: ${{ steps.version.outputs.name }}
+      signed: ${{ steps.keystore.outputs.has }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Setup Gradle (dengan cache)
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: ${{ github.event_name == 'pull_request' }}
+          validate-wrappers: true
+
+      - name: Hitung versionName / versionCode
+        id: version
+        run: |
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            NAME="${GITHUB_REF_NAME#v}"
+            CODE="${GITHUB_RUN_NUMBER}"
+          elif [ -n "${{ inputs.version_name }}" ]; then
+            NAME="${{ inputs.version_name }}"
+            CODE="${GITHUB_RUN_NUMBER}"
+          else
+            NAME="1.0.0-ci.${GITHUB_RUN_NUMBER}"
+            CODE="${GITHUB_RUN_NUMBER}"
+          fi
+          echo "name=${NAME}" >> "$GITHUB_OUTPUT"
+          echo "code=${CODE}" >> "$GITHUB_OUTPUT"
+
+      - name: Deteksi keystore release
+        id: keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "has=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::KEYSTORE_BASE64 belum diisi, release APK bakal ditandatangani pakai debug key."
+          fi
+
+      - name: Decode keystore ke file (gitignored)
+        if: steps.keystore.outputs.has == 'true'
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 -d > release.keystore
+          chmod 600 release.keystore
+          ls -l release.keystore
+
+      - name: Unit test
+        run: ./gradlew --no-daemon testDebugUnitTest --stacktrace
+
+      - name: Build APK
+        env:
+          VERSION_NAME: ${{ steps.version.outputs.name }}
+          VERSION_CODE: ${{ steps.version.outputs.code }}
+          KEYSTORE_PATH: ${{ steps.keystore.outputs.has == 'true' && 'release.keystore' || '' }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: ./gradlew --no-daemon assembleDebug assembleRelease --stacktrace
+
+      - name: Bersihin keystore dari runner
+        if: always()
+        run: rm -f release.keystore
+
+      - name: Kumpulin artifact
+        run: |
+          mkdir -p artifacts
+          cp app/build/outputs/apk/debug/*.apk "artifacts/Nabungin-${{ steps.version.outputs.name }}-debug.apk"
+          cp app/build/outputs/apk/release/*.apk "artifacts/Nabungin-${{ steps.version.outputs.name }}-release.apk"
+          cd artifacts && sha256sum *.apk > SHA256SUMS.txt && ls -lh
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Nabungin-${{ steps.version.outputs.name }}-${{ github.sha }}
+          path: artifacts/
+          retention-days: 14
+          if-no-files-found: error
+
+      - name: Laporan build
+        if: always()
+        run: |
+          {
+            echo "### Nabungin build report"
+            echo ""
+            echo "| Item | Nilai |"
+            echo "| --- | --- |"
+            echo "| versionName | ${{ steps.version.outputs.name }} |"
+            echo "| versionCode | ${{ steps.version.outputs.code }} |"
+            echo "| Release signed | ${{ steps.keystore.outputs.has }} |"
+            echo "| Runner | ${RUNNER_OS} ${RUNNER_ARCH} |"
+            echo ""
+            echo "APK tersedia di tab Artifacts workflow ini."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  release:
+    name: Publish GitHub Release
+    needs: build
+    if: ${{ startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.create_release) }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: Nabungin-${{ needs.build.outputs.version_name }}-${{ github.sha }}
+          path: artifacts
+
+      - name: Upload ke GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('v{0}', needs.build.outputs.version_name) }}
+          name: Nabungin ${{ needs.build.outputs.version_name }}
+          generate_release_notes: true
+          draft: false
+          files: |
+            artifacts/*.apk
+            artifacts/SHA256SUMS.txt
+          body: |
+            ## Nabungin ${{ needs.build.outputs.version_name }}
+
+            APK debug dan release dari workflow run #${{ github.run_number }}.
+
+            - Release APK: siap install (`adb install Nabungin-*-release.apk`)
+            - Debug APK: buat testing cepat
+            - Cek integritas: `sha256sum -c SHA256SUMS.txt`
+
+            Semua data disimpan lokal di perangkat (Room + DataStore). Tidak ada server.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

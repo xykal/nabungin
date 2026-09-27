@@ -1,0 +1,36 @@
+# --- Gradle / build ---
+.gradle/
+build/
+*/build/
+captures/
+.externalNativeBuild/
+.cxx/
+local.properties
+
+# --- IDE ---
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+
+# --- Signing & secrets: JANGAN pernah masuk repo ---
+*.jks
+*.keystore
+keystore.properties
+secrets.properties
+.env
+.env.*
+uploads/
+ini-buat-kerja.json
+ini-buat-kerja.txt
+*.pem
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+
+# --- CI artifacts ---
+artifacts/
+outputs/
+*.apk.bak
