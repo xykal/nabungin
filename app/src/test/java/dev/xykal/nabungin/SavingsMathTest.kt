@@ -23,7 +23,7 @@ class SavingsMathTest {
         name = "Dana Darurat",
         targetAmount = target,
         deadline = deadlineInDays?.let { LocalDate.now().plusDays(it) },
-        createdAtMillis = System.currentTimeMillis() - ChronoUnit.DAYS.toMillis(createdDaysAgo),
+        createdAtMillis = System.currentTimeMillis() - java.time.Duration.ofDays(createdDaysAgo).toMillis(),
         saved = saved,
     )
 
