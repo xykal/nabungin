@@ -16,7 +16,9 @@ for name, dst, width in [('logo_mascot','brand_mark',512),('ill_goal','art_goal'
     bg = np.median(np.concatenate([im[:55,:55].reshape(-1,3), im[:55,-55:].reshape(-1,3),
                                    im[-55:,:55].reshape(-1,3),im[-55:,-55:].reshape(-1,3)]),axis=0)
     diff=np.max(np.abs(im.astype('float32')-bg),axis=2)
-    near=(diff<34).astype('uint8')
+    # Chroma condition handles AI's slight background color shifts and its soft cast shadow.
+    chroma=(im[:,:,1].astype('int16')-im[:,:,2].astype('int16'))
+    near=((diff<47) | ((chroma>124)&(im[:,:,0]>62))).astype('uint8')
     flood=np.zeros((h+2,w+2),dtype=np.uint8)
     connected=np.zeros_like(near)
     for x,y in [(0,0),(w-1,0),(0,h-1),(w-1,h-1)]:
@@ -27,9 +29,18 @@ for name, dst, width in [('logo_mascot','brand_mark',512),('ill_goal','art_goal'
             flood[:]=0
     # High confidence foreground and blurred edge; eliminate background hue fringe via alpha matting.
     alpha=(1-connected)*255
-    edge=cv2.GaussianBlur(alpha.astype('float32'),(5,5),1)
-    alpha=np.maximum(alpha.astype('float32'),edge).astype('uint8')
-    rgba=np.dstack([im,alpha])
+    # Anti-aliased cutout without leaking opaque green chroma into the composited art.
+    alpha=cv2.GaussianBlur(alpha.astype('float32'),(3,3),0.6).astype('uint8')
+    # Spill correction around semi-transparent silhouette; don't recolor the glass interior.
+    if name=='logo_mascot':
+        # Remove the AI motion blur only where it falls in the background above the lid.
+        yy,xx=np.indices(alpha.shape)
+        blur=(xx>435)&(xx<610)&(yy<285)&(im[:,:,0]<205)&(im[:,:,1]>140)
+        alpha[blur]=0
+    semi=(alpha>0)&(alpha<245)
+    clean=im.copy()
+    clean[:,:,1][semi]=np.minimum(clean[:,:,1][semi],(clean[:,:,0][semi].astype('int16')+55).clip(0,255)).astype('uint8')
+    rgba=np.dstack([clean,alpha])
     image=Image.fromarray(rgba,'RGBA')
     bb=image.getbbox()
     image=image.crop(bb)
