@@ -24,8 +24,10 @@ class NabunginApp : Application(), Configuration.Provider {
         Notifications.ensureChannel(this)
         container.appScope.launch {
             runCatching {
-                container.repository.seedIfEmpty()
-                container.settings.setSeeded()
+                if (!container.settings.current().seeded) {
+                    container.repository.seedIfEmpty()
+                    container.settings.setSeeded()
+                }
                 val settings = container.settings.current()
                 WorkScheduler.syncAutoSave(this@NabunginApp)
                 WorkScheduler.syncReminder(this@NabunginApp, settings)

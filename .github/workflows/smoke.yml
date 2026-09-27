@@ -21,11 +21,16 @@ jobs:
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
-      - name: Download original v1.0.0 APKs
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          validate-wrappers: true
+      - name: Build fresh debug and release APKs
+        run: ./gradlew --no-daemon testDebugUnitTest assembleDebug assembleRelease
+      - name: Prepare APKs
         run: |
           mkdir -p smoke-results
-          curl -fsSL --retry 3 -o smoke-results/release.apk https://github.com/xykal/nabungin/releases/download/v1.0.0/Nabungin-1.0.0-release.apk
-          curl -fsSL --retry 3 -o smoke-results/debug.apk https://github.com/xykal/nabungin/releases/download/v1.0.0/Nabungin-1.0.0-debug.apk
+          cp app/build/outputs/apk/release/*.apk smoke-results/release.apk
+          cp app/build/outputs/apk/debug/*.apk smoke-results/debug.apk
       - name: Install and launch on emulator (API 35)
         id: emulator
         uses: reactivecircus/android-emulator-runner@v2

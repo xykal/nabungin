@@ -141,6 +141,38 @@ jobs:
         if: always()
         run: rm -f release.keystore
 
+      - name: Enable KVM for Android emulator
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Prepare APKs for first-launch smoke test
+        run: |
+          mkdir -p smoke-results
+          cp app/build/outputs/apk/debug/*.apk smoke-results/debug.apk
+          cp app/build/outputs/apk/release/*.apk smoke-results/release.apk
+
+      - name: First-launch smoke test (real API 35 emulator, debug + release)
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          emulator-boot-timeout: 600
+          script: bash scripts/smoke-android.sh
+
+      - name: Upload emulator logcat on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-crash-logcat-${{ github.run_number }}
+          path: smoke-results/*.log
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: Kumpulin artifact
         run: |
           mkdir -p artifacts

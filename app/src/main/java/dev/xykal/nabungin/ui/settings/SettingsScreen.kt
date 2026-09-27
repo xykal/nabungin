@@ -1,6 +1,9 @@
 package dev.xykal.nabungin.ui.settings
 
-import android.content.Intent
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.core.content.ContextCompat
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -73,6 +76,13 @@ fun SettingsScreen(onBack: () -> Unit) {
         contract = ActivityResultContracts.OpenDocument(),
     ) { uri -> uri?.let { vm.import(context, it) } }
 
+    // Ask only when the user enables reminders, never during Activity.onCreate.
+    val notificationPermission = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+    ) { granted ->
+        if (granted) vm.setReminder(context, true)
+    }
+
     LaunchedEffect(message) {
         if (message != null) {
             kotlinx.coroutines.delay(2_500)
@@ -119,7 +129,15 @@ fun SettingsScreen(onBack: () -> Unit) {
                     )
                 }
                 Chip(if (settings.reminderEnabled) "Aktif" else "Mati", settings.reminderEnabled) {
-                    vm.setReminder(context, !settings.reminderEnabled)
+                    if (settings.reminderEnabled) {
+                        vm.setReminder(context, false)
+                    } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                        ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+                    ) {
+                        notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    } else {
+                        vm.setReminder(context, true)
+                    }
                 }
             }
             if (settings.reminderEnabled) {
