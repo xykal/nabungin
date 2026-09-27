@@ -1,6 +1,7 @@
 package dev.xykal.nabungin.ui.goal
 
 import android.app.DatePickerDialog
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -332,4 +333,4 @@ fun GoalEditScreen(
 }
 
 private fun Modifier.clickablePick(onClick: () -> Unit): Modifier =
-    this.then(androidx.compose.foundation.clickable(onClick = onClick))
+    this.clickable(onClick = onClick)

@@ -300,8 +300,8 @@ fun BarChart(
 fun Chip(
     label: String,
     selected: Boolean,
-    onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    onClick: () -> Unit,
 ) {
     val colors = LocalNabunginColors.current
     Box(

@@ -116,6 +116,7 @@ fun GoalDetailScreen(
 
         val accent = GoalAccents[current.accentIndex.coerceIn(0, GoalAccents.lastIndex)]
         val pace = SavingsMath.pace(current)
+        val currentRule = rule
 
         Spacer(Modifier.height(22.dp))
         Column(
@@ -189,8 +190,8 @@ fun GoalDetailScreen(
                         color = colors.onSurface,
                     )
                     Text(
-                        text = if (active && rule != null) {
-                            "${Money.format(rule.amount)} - ${rule.interval.label} - ${timeLabel(rule.hour, rule.minute)}"
+                        text = if (active && currentRule != null) {
+                            "${Money.format(currentRule.amount)} - ${currentRule.interval.label} - ${timeLabel(currentRule.hour, currentRule.minute)}"
                         } else {
                             "Setor berkala tanpa perlu ingat-inget"
                         },

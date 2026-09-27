@@ -83,8 +83,8 @@ class SettingsStore(private val context: Context) {
 
     suspend fun disableLock() = context.settingsDataStore.edit {
         it[Keys.lockOn] = false
-        it[Keys.pinHash] = null
-        it[Keys.pinSalt] = null
+        it.remove(Keys.pinHash)
+        it.remove(Keys.pinSalt)
         it[Keys.biometric] = false
     }
 
