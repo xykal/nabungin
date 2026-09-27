@@ -17,16 +17,36 @@ object SavingsMath {
             goal.remaining <= 0L -> 0L
             daysLeft == null -> 0L
             daysLeft <= 0L -> goal.remaining
-            else -> (goal.remaining + daysLeft - 1) / daysLeft
+            else -> goal.remaining / daysLeft + if (goal.remaining % daysLeft != 0L) 1L else 0L
         }
-        val etaDays = etaFromPace(goal.saved, goal.targetAmount, averagePerDay(goal))
+        val etaDays = etaFromPace(goal.saved, goal.targetAmount,
+            if (goal.dailyPlan > 0L) goal.dailyPlan else averagePerDay(goal))
         return GoalPace(
             dailyNeeded = dailyNeeded,
             daysLeft = daysLeft,
             etaDays = etaDays,
-            onTrack = daysLeft == null || (etaDays != null && etaDays <= daysLeft),
+            onTrack = goal.isReached || daysLeft == null || (etaDays != null && etaDays <= daysLeft),
         )
     }
+
+
+    /** Daily target required for a deadline. The optional plan is shown separately, not mistaken for actual savings. */
+    fun requiredPerDay(remaining: Long, deadline: LocalDate?, today: LocalDate = LocalDate.now()): Long {
+        if (remaining <= 0L || deadline == null) return 0L
+        val days = ChronoUnit.DAYS.between(today, deadline)
+        if (days <= 0L) return remaining
+        return remaining / days + if (remaining % days != 0L) 1L else 0L
+    }
+
+    /** Pace forecast uses the user's planned amount, NEVER creates deposits. */
+    fun projectedDate(remaining: Long, dailyPlan: Long, today: LocalDate = LocalDate.now()): LocalDate? {
+        if (dailyPlan <= 0L || remaining <= 0L) return null
+        val days = remaining / dailyPlan + if (remaining % dailyPlan != 0L) 1L else 0L
+        return runCatching { today.plusDays(days) }.getOrNull()
+    }
+
+    fun monthTarget(dailyPlan: Long, daysInMonth: Int): Long =
+        if (dailyPlan <= 0L) 0L else dailyPlan * daysInMonth
 
     fun averagePerDay(goal: Goal): Long {
         if (goal.saved <= 0L) return 0L
@@ -45,7 +65,8 @@ object SavingsMath {
     fun etaFromPace(saved: Long, target: Long, perDay: Long): Long? {
         if (target <= 0L || saved >= target) return 0L
         if (perDay <= 0L) return null
-        return (target - saved + perDay - 1) / perDay
+        val remaining = target - saved
+        return remaining / perDay + if (remaining % perDay != 0L) 1L else 0L
     }
 
     /** Streak = jumlah hari beruntun dengan minimal satu setoran, mundur dari hari ini (atau kemarin). */

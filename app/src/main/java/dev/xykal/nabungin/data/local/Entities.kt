@@ -15,6 +15,8 @@ data class GoalEntity(
     val accentIndex: Int = 0,
     val iconKey: String = "coins",
     val category: String = "Umum",
+    val purpose: String = "",
+    val dailyPlan: Long = 0L,
     val createdAtMillis: Long = System.currentTimeMillis(),
     val archived: Boolean = false,
 )

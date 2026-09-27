@@ -74,10 +74,10 @@ class ReminderWorker(
         val streak = SavingsMath.streak(deposits)
         val goals = container.repository.rawGoals().size
         val body = when {
-            todayTotal > 0L && streak > 1 -> "Streak lu jalan, jangan putus. Tambah setoran lagi?"
-            todayTotal > 0L -> "Setoran hari ini sudah masuk. Lanjut besok ya."
+            todayTotal > 0L && streak > 1 -> "Streak lu jalan, jangan putus. Mau nabung lagi?"
+            todayTotal > 0L -> "Tabungan hari ini sudah masuk. Lanjut besok ya."
             goals == 0 -> "Bikin tujuan tabungan pertama lu, mulai dari nominal kecil."
-            else -> "Hari ini belum ada setoran. Sisihkan sedikit dulu, biar target tetap on-track."
+            else -> "Hari ini belum nabung. Sisihkan sedikit dulu, biar target tetap on-track."
         }
         Notifications.reminder(
             context = applicationContext,

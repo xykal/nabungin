@@ -116,8 +116,13 @@ fun GoalDetailScreen(
 
         val accent = GoalAccents[current.accentIndex.coerceIn(0, GoalAccents.lastIndex)]
         val pace = SavingsMath.pace(current)
+        val forecast = SavingsMath.projectedDate(current.remaining, current.dailyPlan)
         val currentRule = rule
 
+        if (current.purpose.isNotBlank()) {
+            Spacer(Modifier.height(12.dp))
+            Text(current.purpose, style = MaterialTheme.typography.bodyMedium, color = colors.muted)
+        }
         Spacer(Modifier.height(22.dp))
         Column(
             modifier = Modifier.fillMaxWidth(),
@@ -145,6 +150,8 @@ fun GoalDetailScreen(
         Spacer(Modifier.height(22.dp))
         NabunginCard(padding = PaddingValues(18.dp)) {
             LabelValueRow("Sisa ke target", Money.format(current.remaining))
+            LabelValueRow("Rencana harian", if (current.dailyPlan > 0L) "${Money.format(current.dailyPlan)}/hari" else "Belum diatur")
+            if (forecast != null) LabelValueRow("Tercapai kalau rutin", Dates.full(forecast), colors.accent)
             LabelValueRow(
                 label = "Perlu nabung",
                 value = if (pace.dailyNeeded > 0L) "${Money.format(pace.dailyNeeded)}/hari" else "-",
@@ -159,7 +166,7 @@ fun GoalDetailScreen(
                 valueColor = if (pace.onTrack) colors.accent else colors.warning,
             )
             LabelValueRow("Rata-rata harian", Money.format(SavingsMath.averagePerDay(current)))
-            LabelValueRow("Jumlah setoran", "${current.depositCount}x")
+            LabelValueRow("Jumlah menabung", "${current.depositCount}x")
         }
 
         Spacer(Modifier.height(18.dp))
@@ -193,7 +200,7 @@ fun GoalDetailScreen(
                         text = if (active && currentRule != null) {
                             "${Money.format(currentRule.amount)} - ${currentRule.interval.label} - ${timeLabel(currentRule.hour, currentRule.minute)}"
                         } else {
-                            "Setor berkala tanpa perlu ingat-inget"
+                            "Tabung berkala tanpa perlu ingat-inget"
                         },
                         style = MaterialTheme.typography.bodySmall,
                         color = colors.muted,
@@ -210,13 +217,13 @@ fun GoalDetailScreen(
         }
 
         Spacer(Modifier.height(18.dp))
-        SectionHeader(title = "Riwayat setoran")
+        SectionHeader(title = "Riwayat menabung")
         Spacer(Modifier.height(8.dp))
         if (deposits.isEmpty()) {
             EmptyState(
                 icon = AppIcons.Ledger,
-                title = "Belum ada setoran",
-                body = "Tiap setoran bakal muncul di sini, lengkap dengan sumbernya (manual atau auto).",
+                title = "Belum ada tabungan masuk",
+                body = "Tiap tabungan bakal muncul di sini, lengkap dengan sumbernya (manual atau auto).",
             )
         } else {
             deposits.take(30).forEach { deposit ->
@@ -229,7 +236,7 @@ fun GoalDetailScreen(
         }
 
         Spacer(Modifier.height(20.dp))
-        NButton(text = "Setor sekarang", onClick = { showDeposit = true }, icon = AppIcons.Plus)
+        NButton(text = "Tabung sekarang", onClick = { showDeposit = true }, icon = AppIcons.Plus)
         Spacer(Modifier.height(10.dp))
         NButton(
             text = "Hapus tujuan ini",
@@ -262,7 +269,7 @@ fun GoalDetailScreen(
         ConfirmOverlay(
             visible = true,
             title = "Hapus \"${current?.name ?: ""}\"?",
-            body = "Semua setoran yang nyangkut di tujuan ini ikut terhapus permanen. Nggak bisa di-undo.",
+            body = "Semua riwayat tabungan yang nyangkut di tujuan ini ikut terhapus permanen. Nggak bisa di-undo.",
             confirmLabel = "Hapus permanen",
             onConfirm = {
                 confirmDelete = false
@@ -284,7 +291,7 @@ private fun DepositRow(deposit: Deposit, onDelete: () -> Unit) {
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = deposit.note.ifBlank { "Setoran" },
+                text = deposit.note.ifBlank { "Tabungan" },
                 style = MaterialTheme.typography.bodyLarge,
                 color = colors.onSurface,
                 maxLines = 1,
@@ -304,7 +311,7 @@ private fun DepositRow(deposit: Deposit, onDelete: () -> Unit) {
         IconSquareButton(
             icon = AppIcons.Close,
             onClick = onDelete,
-            contentDescription = "Hapus setoran",
+            contentDescription = "Hapus catatan tabungan",
             tint = colors.muted,
         )
     }
@@ -330,7 +337,7 @@ private fun RuleEditorSheet(
         Column(modifier = Modifier.fillMaxWidth()) {
             SheetTitle(
                 title = "Auto-save",
-                subtitle = "Setor otomatis ke ${goal.name}",
+                subtitle = "Catat tabungan berkala ke ${goal.name}",
                 onClose = onDismiss,
             )
             Spacer(Modifier.height(16.dp))
@@ -381,7 +388,7 @@ private fun RuleEditorSheet(
             )
             Spacer(Modifier.height(14.dp))
             NButton(
-                text = "Simpan aturan",
+                text = "Simpan jadwal",
                 onClick = {
                     onSave(
                         AutoRule(
@@ -416,7 +423,7 @@ private fun RuleEditorSheet(
 
 private object LocalEta {
     fun describe(days: Long): String {
-        val date = java.time.LocalDate.now().plusDays(days)
-        return "${Dates.full(date)} (sekitar $days hari)"
+        val date = runCatching { java.time.LocalDate.now().plusDays(days) }.getOrNull()
+        return date?.let { "${Dates.full(it)} (sekitar $days hari)" } ?: "Belum bisa diprediksi"
     }
 }

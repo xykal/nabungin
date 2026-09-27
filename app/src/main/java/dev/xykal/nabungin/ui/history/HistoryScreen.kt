@@ -69,7 +69,7 @@ fun HistoryScreen(onOpenGoal: (Long) -> Unit) {
             color = colors.onSurface,
         )
         Text(
-            text = "${deposits.size} setoran tercatat, total ${Money.format(deposits.sumOf { it.amount })}",
+            text = "${deposits.size} kali nabung tercatat, total ${Money.format(deposits.sumOf { it.amount })}",
             style = MaterialTheme.typography.bodySmall,
             color = colors.muted,
         )
@@ -92,7 +92,7 @@ fun HistoryScreen(onOpenGoal: (Long) -> Unit) {
             EmptyState(
                 icon = AppIcons.Ledger,
                 title = "Belum ada catatan",
-                body = "Setoran yang lu masukin bakal muncul di sini, dikelompokkan per tanggal.",
+                body = "Tabungan yang lu masukin bakal muncul di sini, dikelompokkan per tanggal.",
             )
         } else {
             grouped.forEach { (day, items) ->

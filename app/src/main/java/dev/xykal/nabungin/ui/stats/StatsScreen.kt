@@ -26,6 +26,7 @@ import dev.xykal.nabungin.domain.SavingsMath
 import dev.xykal.nabungin.domain.format.Dates
 import dev.xykal.nabungin.domain.format.Money
 import dev.xykal.nabungin.ui.components.BarChart
+import dev.xykal.nabungin.ui.components.animatedAmount
 import dev.xykal.nabungin.ui.components.EmptyState
 import dev.xykal.nabungin.ui.components.IconBubble
 import dev.xykal.nabungin.ui.components.LabelValueRow
@@ -68,12 +69,13 @@ fun StatsScreen() {
         NabunginCard(padding = PaddingValues(18.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(modifier = Modifier.weight(1f)) {
-                    LabelValueRow("Total terkumpul", Money.format(snapshot.totalSaved))
+                    LabelValueRow("Total terkumpul", Money.format(animatedAmount(snapshot.totalSaved)))
                     LabelValueRow("Total target", Money.format(snapshot.totalTarget))
                     LabelValueRow("Bulan ini", Money.format(snapshot.monthTotal))
                     LabelValueRow("30 hari terakhir", Money.format(last30Total))
                     LabelValueRow("Rata-rata per hari aktif", Money.format(perDay))
                     LabelValueRow("Streak sekarang", "${snapshot.streak} hari")
+                    LabelValueRow("Rencana seluruh tabungan", "${Money.format(snapshot.goals.sumOf { it.dailyPlan })}/hari")
                 }
                 ProgressRing(
                     progress = if (snapshot.totalTarget > 0L) {
@@ -85,7 +87,7 @@ fun StatsScreen() {
                     stroke = 9.dp,
                 ) {
                     Text(
-                        text = if (snapshot.totalTarget > 0L) "${snapshot.totalSaved * 100 / snapshot.totalTarget}%" else "0%",
+                        text = if (snapshot.totalTarget > 0L) "${(snapshot.totalSaved.toDouble() / snapshot.totalTarget * 100).toInt()}%" else "0%",
                         style = MaterialTheme.typography.titleMedium,
                         color = colors.onSurface,
                     )
@@ -105,7 +107,7 @@ fun StatsScreen() {
             }
             Spacer(Modifier.height(4.dp))
             Text(
-                text = "$activeDays hari ada setoran dari 30 hari terakhir",
+                text = "$activeDays hari ada tabungan masuk dari 30 hari terakhir",
                 style = MaterialTheme.typography.bodySmall,
                 color = colors.muted,
             )
@@ -118,7 +120,7 @@ fun StatsScreen() {
             EmptyState(
                 icon = AppIcons.Chart,
                 title = "Belum ada data",
-                body = "Bikin tujuan dan mulai setor, statistik bakal keisi otomatis.",
+                body = "Bikin tujuan dan mulai nabung, statistik bakal keisi otomatis.",
             )
         } else {
             snapshot.goals.sortedByDescending { it.saved }.forEach { goal ->
@@ -149,7 +151,7 @@ fun StatsScreen() {
                                 color = colors.onSurface,
                             )
                             Text(
-                                text = pace.etaDays?.let { "ETA ${Dates.full(LocalDate.now().plusDays(it))}" } ?: "ETA belum bisa dihitung",
+                                text = pace.etaDays?.let { runCatching { "ETA ${Dates.full(LocalDate.now().plusDays(it))}" }.getOrDefault("ETA belum tersedia") } ?: "ETA belum bisa dihitung",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = if (pace.onTrack) colors.accent else colors.warning,
                             )

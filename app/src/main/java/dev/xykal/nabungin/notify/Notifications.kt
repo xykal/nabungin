@@ -62,7 +62,7 @@ object Notifications {
         val total = inserted.sumOf { it.second }
         val title = "Auto-save jalan"
         val body = buildString {
-            append("${inserted.size} tujuan kena setor otomatis, total ${Money.format(total)}")
+            append("${inserted.size} tujuan ditabung otomatis, total ${Money.format(total)}")
             inserted.take(4).forEach { (name, amount) ->
                 append("\n- $name: ${Money.format(amount)}")
             }

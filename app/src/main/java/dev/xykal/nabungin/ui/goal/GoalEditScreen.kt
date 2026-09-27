@@ -31,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import dev.xykal.nabungin.core.appViewModel
+import dev.xykal.nabungin.domain.SavingsMath
 import dev.xykal.nabungin.domain.format.Dates
 import dev.xykal.nabungin.domain.format.Money
 import dev.xykal.nabungin.domain.model.AutoRule
@@ -67,6 +68,9 @@ fun GoalEditScreen(
 
     var loaded by remember { mutableStateOf(goalId <= 0L) }
     var name by remember { mutableStateOf("") }
+    var purpose by remember { mutableStateOf("") }
+    var dailyPlanDigits by remember { mutableStateOf("") }
+    var showPlanSheet by remember { mutableStateOf(false) }
     var targetDigits by remember { mutableStateOf("") }
     var deadline by remember { mutableStateOf<LocalDate?>(null) }
     var accentIndex by remember { mutableStateOf(0) }
@@ -84,6 +88,8 @@ fun GoalEditScreen(
             val goal = vm.loadGoal(goalId)
             if (goal != null) {
                 name = goal.name
+                purpose = goal.purpose
+                dailyPlanDigits = goal.dailyPlan.takeIf { it > 0L }?.toString() ?: ""
                 targetDigits = goal.targetAmount.takeIf { it > 0 }?.toString() ?: ""
                 deadline = goal.deadline
                 accentIndex = goal.accentIndex
@@ -102,6 +108,9 @@ fun GoalEditScreen(
     }
 
     val target = Money.parseDigits(targetDigits)
+    val dailyPlan = Money.parseDigits(dailyPlanDigits)
+    val needed = SavingsMath.requiredPerDay(target, deadline)
+    val forecast = SavingsMath.projectedDate(target, dailyPlan)
 
     Column(
         modifier = Modifier
@@ -112,7 +121,7 @@ fun GoalEditScreen(
     ) {
         Spacer(Modifier.height(14.dp))
         NabunginTopBar(
-            title = if (goalId > 0L) "Edit tujuan" else "Tujuan baru",
+            title = if (goalId > 0L) "Edit tujuan" else "Tabungan baru",
             onBack = onBack,
             actions = {
                 IconBubble(icon = AppIcons.of(iconKey), accent = GoalAccents[accentIndex.coerceIn(0, GoalAccents.lastIndex)], size = 40.dp)
@@ -120,12 +129,23 @@ fun GoalEditScreen(
         )
         Spacer(Modifier.height(18.dp))
 
-        SectionHeader(title = "Nama tujuan")
+        Text("Biar tiap rupiah ada arahnya.", style = MaterialTheme.typography.bodyMedium, color = colors.muted)
+        Spacer(Modifier.height(22.dp))
+        SectionHeader(title = "Mau nabung buat apa?")
         Spacer(Modifier.height(8.dp))
         NabunginTextField(
             value = name,
             onValueChange = { name = it },
-            placeholder = "Misal: Dana darurat 6 bulan",
+            placeholder = "Misal: Laptop baru / Dana darurat",
+        )
+        Spacer(Modifier.height(14.dp))
+        SectionHeader(title = "Alasan & cerita (opsional)")
+        Spacer(Modifier.height(8.dp))
+        NabunginTextField(
+            value = purpose,
+            onValueChange = { purpose = it },
+            placeholder = "Buat kerja, liburan bareng keluarga...",
+            maxChars = 120,
         )
         Spacer(Modifier.height(18.dp))
 
@@ -172,6 +192,40 @@ fun GoalEditScreen(
                 tone = ButtonTone.Quiet,
                 fillWidth = false,
             )
+        }
+        Spacer(Modifier.height(18.dp))
+
+        SectionHeader(title = "Mau tabung berapa per hari?")
+        Spacer(Modifier.height(8.dp))
+        NabunginCard(padding = PaddingValues(16.dp)) {
+            Text(
+                text = if (dailyPlan > 0L) "${Money.format(dailyPlan)} / hari" else "Tentukan sendiri (opsional)",
+                style = MaterialTheme.typography.titleLarge,
+                color = colors.onSurface,
+            )
+            Spacer(Modifier.height(6.dp))
+            Text(
+                text = when {
+                    target <= 0L -> "Isi target nominal dulu buat lihat simulasi."
+                    deadline != null && needed > 0L -> "Biar selesai sesuai tanggal: sekitar ${Money.format(needed)} / hari."
+                    else -> "Bebas menentukan ritme, bisa diubah kapan saja."
+                },
+                style = MaterialTheme.typography.bodySmall, color = colors.muted,
+            )
+            if (forecast != null) {
+                Spacer(Modifier.height(4.dp))
+                Text("Dengan ritme ini, target diperkirakan ${Dates.full(forecast)}.",
+                    style = MaterialTheme.typography.bodySmall, color = colors.accent)
+            }
+            Spacer(Modifier.height(12.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                NButton("Atur nominal", onClick = { showPlanSheet = true },
+                    modifier = Modifier.weight(1f), tone = ButtonTone.Quiet)
+                if (needed > 0L) {
+                    NButton("Pakai saran", onClick = { dailyPlanDigits = needed.toString() },
+                        modifier = Modifier.weight(1f), tone = ButtonTone.Ghost)
+                }
+            }
         }
         Spacer(Modifier.height(18.dp))
 
@@ -233,7 +287,7 @@ fun GoalEditScreen(
                         text = if (ruleEnabled) {
                             "${Money.format(Money.parseDigits(ruleAmountDigits))} - ${ruleInterval.label} - %02d:00".format(ruleHour)
                         } else {
-                            "Setoran berkala otomatis lewat WorkManager"
+                            "Catat tabungan berkala secara otomatis"
                         },
                         style = MaterialTheme.typography.bodySmall,
                         color = colors.muted,
@@ -270,11 +324,13 @@ fun GoalEditScreen(
 
         Spacer(Modifier.height(24.dp))
         NButton(
-            text = if (goalId > 0L) "Simpan perubahan" else "Bikin tujuan",
+            text = if (goalId > 0L) "Simpan perubahan" else "Buat tabungan",
             onClick = {
                 when {
                     name.isBlank() -> error = "Nama tujuan wajib diisi"
                     target <= 0L -> error = "Target nominal harus lebih dari 0"
+                    deadline != null && !deadline!!.isAfter(LocalDate.now()) -> error = "Tanggal target harus setelah hari ini"
+                    ruleEnabled && Money.parseDigits(ruleAmountDigits) <= 0L -> error = "Isi nominal tabungan otomatis atau matikan jadwal"
                     else -> {
                         error = null
                         val goal = Goal(
@@ -285,6 +341,8 @@ fun GoalEditScreen(
                             accentIndex = accentIndex,
                             iconKey = iconKey,
                             category = category,
+                            purpose = purpose.trim(),
+                            dailyPlan = dailyPlan,
                         )
                         val rule = if (ruleEnabled && Money.parseDigits(ruleAmountDigits) > 0L) {
                             AutoRule(
@@ -308,6 +366,19 @@ fun GoalEditScreen(
         Spacer(Modifier.height(10.dp))
         NButton(text = "Batal", onClick = onBack, tone = ButtonTone.Ghost)
         Spacer(Modifier.height(40.dp))
+    }
+
+    if (showPlanSheet) {
+        BottomSheet(visible = true, onDismiss = { showPlanSheet = false }) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                SheetTitle("Rencana per hari", "Ini rencana, bukan tabungan otomatis.", onClose = { showPlanSheet = false })
+                Spacer(Modifier.height(14.dp))
+                AmountKeypadField(digits = dailyPlanDigits, onDigitsChange = { dailyPlanDigits = it },
+                    hint = "Masukkan nominal yang nyaman buat lu")
+                Spacer(Modifier.height(12.dp))
+                NButton("Simpan rencana", onClick = { showPlanSheet = false }, icon = AppIcons.Check)
+            }
+        }
     }
 
     if (showRuleSheet) {

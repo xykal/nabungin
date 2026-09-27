@@ -129,3 +129,9 @@ adb install -r Nabungin-<versi>-release.apk
 ## License / Lisensi
 
 MIT. Lihat `LICENSE`.
+
+## v1.1.0 — Savings plan / Rencana tabungan
+
+**English:** Create any number of savings goals with a title, optional reason, target amount, daily plan, optional deadline, category, color and icon. The form recommends a daily amount based on the deadline and forecasts a date using your chosen plan. A plan is *not* an automatic deposit; only an actual "Tabung" action or a separately enabled auto-save rule changes the balance. Balance count-up, progress rings/tracks and 30-day bars animate and respect Android's animator scale. Room migrates v1 data to v2 without wiping existing goals and deposits. CI runs an emulator smoke test for both release and debug APKs before publishing.
+
+**Bahasa Indonesia:** Bikin tabungan sebanyak yang lu mau: nama, alasan, target, rencana nominal per hari, deadline opsional, kategori, warna, dan ikon. Form ngasih saran nominal harian berdasarkan deadline sekaligus simulasi tanggal target kalau rutin. Rencana harian *bukan* uang yang sudah ditabung: saldo cuma bertambah kalau lu tekan "Tabung" atau sengaja mengaktifkan auto-save terpisah. Angka saldo, lingkar progres, garis progres, dan grafik 30 hari punya animasi yang mengikuti setelan animasi Android. Room migrasi data v1 ke v2 tanpa hapus riwayat. CI wajib buka APK release dan debug di emulator sebelum publikasi.

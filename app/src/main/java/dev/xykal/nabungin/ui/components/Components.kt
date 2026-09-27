@@ -3,6 +3,9 @@ package dev.xykal.nabungin.ui.components
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -24,6 +27,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -36,6 +42,7 @@ import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -52,6 +59,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -231,9 +239,10 @@ fun ProgressRing(
     progressColor: Color = LocalNabunginColors.current.accent,
     content: (@Composable () -> Unit)? = null,
 ) {
+    val enabled = motionEnabled()
     val animated by animateFloatAsState(
         targetValue = progress.coerceIn(0f, 1f),
-        animationSpec = spring(dampingRatio = 0.8f, stiffness = Spring.StiffnessLow),
+        animationSpec = tween(durationMillis = if (enabled) 900 else 0, easing = FastOutSlowInEasing),
         label = "ring",
     )
     Box(modifier = modifier.size(size), contentAlignment = Alignment.Center) {
@@ -273,6 +282,14 @@ fun BarChart(
     height: Dp = 110.dp,
 ) {
     val colors = LocalNabunginColors.current
+    val enabled = motionEnabled()
+    val total = data.sumOf { it.total }
+    val reveal = remember { Animatable(0f) }
+    LaunchedEffect(total, data.size, enabled) {
+        reveal.snapTo(0f)
+        if (enabled) reveal.animateTo(1f, tween(850, easing = FastOutSlowInEasing))
+        else reveal.snapTo(1f)
+    }
     val max = (data.maxOfOrNull { it.total } ?: 0L).coerceAtLeast(1L)
     Canvas(
         modifier = modifier
@@ -284,7 +301,7 @@ fun BarChart(
         val barWidth = ((size.width - gap * (data.size - 1)) / data.size).coerceAtLeast(1.5f)
         data.forEachIndexed { index, item ->
             val ratio = item.total.toFloat() / max.toFloat()
-            val barHeight = (size.height * ratio).coerceAtLeast(if (item.total > 0L) 4f else 1.5f)
+            val barHeight = (size.height * ratio * reveal.value).coerceAtLeast(if (item.total > 0L) 4f else 1.5f)
             val x = index * (barWidth + gap)
             drawRoundRect(
                 color = if (item.total > 0L) barColor else colors.hairline,
@@ -395,6 +412,7 @@ fun BottomSheet(
     content: @Composable () -> Unit,
 ) {
     val colors = LocalNabunginColors.current
+    val sheetMaxHeight = LocalConfiguration.current.screenHeightDp.dp * 0.86f
     AnimatedVisibility(visible = visible, enter = fadeIn(), exit = fadeOut()) {
         Box(
             modifier = modifier
@@ -406,11 +424,14 @@ fun BottomSheet(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .heightIn(max = sheetMaxHeight)
                     .clip(RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp))
                     .background(colors.background)
                     .pointerInput(Unit) { detectTapGestures(onTap = { }) },
             ) {
-                Column(modifier = Modifier.padding(20.dp)) { content() }
+                Column(modifier = Modifier.verticalScroll(rememberScrollState()).navigationBarsPadding().padding(20.dp)) {
+                    content()
+                }
             }
         }
     }
@@ -533,3 +554,27 @@ private fun KeypadKey(
 
 @Composable
 fun accentOf(index: Int): Color = GoalAccents[index.coerceIn(0, GoalAccents.lastIndex)]
+
+/** Animated, accessible linear track for scanning multiple goals quickly. */
+@Composable
+fun ProgressTrack(
+    progress: Float,
+    color: Color,
+    modifier: Modifier = Modifier,
+) {
+    val enabled = motionEnabled()
+    val animated by animateFloatAsState(
+        targetValue = progress.coerceIn(0f, 1f),
+        animationSpec = tween(durationMillis = if (enabled) 780 else 0, easing = FastOutSlowInEasing),
+        label = "goal-progress-track",
+    )
+    val track = LocalNabunginColors.current.surfaceAlt
+    Canvas(modifier = modifier.fillMaxWidth().height(7.dp)) {
+        drawRoundRect(track, size = Size(size.width, size.height),
+            cornerRadius = androidx.compose.ui.geometry.CornerRadius(size.height / 2))
+        if (animated > 0f) {
+            drawRoundRect(color, size = Size(size.width * animated, size.height),
+                cornerRadius = androidx.compose.ui.geometry.CornerRadius(size.height / 2))
+        }
+    }
+}

@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -39,13 +38,9 @@ fun DepositSheet(
     val overTarget = goal.targetAmount > 0L && goal.saved + amount > goal.targetAmount
 
     BottomSheet(visible = true, onDismiss = onDismiss) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState()),
-        ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
             SheetTitle(
-                title = "Setor tabungan",
+                title = "Tabung sekarang",
                 subtitle = goal.name,
                 onClose = onDismiss,
             )
@@ -53,10 +48,16 @@ fun DepositSheet(
             Text("NOMINAL", style = MaterialTheme.typography.labelSmall, color = colors.muted)
             AmountDisplay(amount = amount, fontSize = 38)
             Text(
-                text = if (goal.remaining > 0L && !overTarget) "Sisa target ${Money.format(goal.remaining)}" else "Target tercapai dengan setoran ini",
+                text = if (goal.remaining > 0L && !overTarget) "Sisa target ${Money.format(goal.remaining)}" else "Target tercapai dengan tabungan ini",
                 style = MaterialTheme.typography.bodySmall,
                 color = if (overTarget) colors.warning else colors.muted,
             )
+            if (goal.dailyPlan > 0L) {
+                Spacer(Modifier.height(8.dp))
+                Chip(label = "Pakai rencana harian ${Money.format(goal.dailyPlan)}", selected = false) {
+                    digits = goal.dailyPlan.toString()
+                }
+            }
             Spacer(Modifier.height(12.dp))
             Row(
                 modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
@@ -97,7 +98,7 @@ fun DepositSheet(
             )
             Spacer(Modifier.height(14.dp))
             NButton(
-                text = if (amount > 0L) "Setor ${Money.format(amount)}" else "Masukin nominal dulu",
+                text = if (amount > 0L) "Tabung ${Money.format(amount)}" else "Masukin nominal dulu",
                 onClick = {
                     onSave(amount, note, day)
                     onDismiss()

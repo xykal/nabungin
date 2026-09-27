@@ -288,7 +288,7 @@ fun SettingsScreen(onBack: () -> Unit) {
         ConfirmOverlay(
             visible = true,
             title = "Hapus semua data?",
-            body = "Semua tujuan, setoran, dan aturan auto-save bakal hilang dari HP ini. Export backup dulu kalau masih ragu.",
+            body = "Semua tujuan, riwayat tabungan, dan aturan auto-save bakal hilang dari HP ini. Export backup dulu kalau masih ragu.",
             confirmLabel = "Hapus semua",
             onConfirm = {
                 confirmWipe = false

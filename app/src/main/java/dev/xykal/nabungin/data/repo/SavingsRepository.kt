@@ -189,6 +189,8 @@ private fun GoalEntity.toDomain(saved: Long, count: Int, lastDay: LocalDate?) = 
     accentIndex = accentIndex,
     iconKey = iconKey,
     category = category,
+    purpose = purpose,
+    dailyPlan = dailyPlan,
     createdAtMillis = createdAtMillis,
     archived = archived,
     saved = saved,
@@ -204,6 +206,8 @@ private fun Goal.toEntity() = GoalEntity(
     accentIndex = accentIndex,
     iconKey = iconKey,
     category = category,
+    purpose = purpose,
+    dailyPlan = dailyPlan,
     createdAtMillis = createdAtMillis,
     archived = archived,
 )

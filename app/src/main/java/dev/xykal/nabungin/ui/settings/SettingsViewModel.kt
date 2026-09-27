@@ -79,7 +79,7 @@ class SettingsViewModel(private val container: AppContainer) : ViewModel() {
         viewModelScope.launch {
             container.backup.import(context, uri)
                 .onSuccess { (goals, deposits) ->
-                    _message.value = "Restore sukses: $goals tujuan, $deposits setoran"
+                    _message.value = "Restore sukses: $goals tujuan, $deposits catatan tabungan"
                 }
                 .onFailure { _message.value = "Import gagal: ${it.message}" }
         }

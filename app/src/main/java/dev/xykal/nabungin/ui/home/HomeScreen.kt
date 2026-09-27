@@ -28,6 +28,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.xykal.nabungin.core.appViewModel
+import dev.xykal.nabungin.domain.SavingsMath
+import dev.xykal.nabungin.ui.components.animatedAmount
+import androidx.compose.ui.text.style.TextOverflow
 import dev.xykal.nabungin.domain.format.Dates
 import dev.xykal.nabungin.domain.format.Money
 import dev.xykal.nabungin.domain.model.Goal
@@ -40,6 +43,7 @@ import dev.xykal.nabungin.ui.components.IconSquareButton
 import dev.xykal.nabungin.ui.components.NButton
 import dev.xykal.nabungin.ui.components.NabunginCard
 import dev.xykal.nabungin.ui.components.ProgressRing
+import dev.xykal.nabungin.ui.components.ProgressTrack
 import dev.xykal.nabungin.ui.components.SectionHeader
 import dev.xykal.nabungin.ui.components.StatTile
 import dev.xykal.nabungin.ui.icons.AppIcons
@@ -83,10 +87,12 @@ fun HomeScreen(
                 Text("TOTAL TERKUMPUL", style = MaterialTheme.typography.labelSmall, color = colors.muted)
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    text = Money.format(snapshot.totalSaved),
+                    text = Money.format(animatedAmount(snapshot.totalSaved)),
                     fontFamily = FontFamily.Monospace,
-                    fontSize = 42.sp,
-                    lineHeight = 46.sp,
+                    fontSize = 34.sp,
+                    lineHeight = 40.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                     color = colors.onSurface,
                 )
                 Text(
@@ -106,7 +112,7 @@ fun HomeScreen(
             ) {
                 Text(
                     text = if (snapshot.totalTarget > 0L) {
-                        "${(snapshot.totalSaved * 100 / snapshot.totalTarget)}%"
+                        "${(snapshot.totalSaved.toDouble() / snapshot.totalTarget * 100).toInt()}%"
                     } else {
                         "0%"
                     },
@@ -149,12 +155,23 @@ fun HomeScreen(
                 color = colors.muted,
             )
         }
+        if (snapshot.goals.any { it.dailyPlan > 0L }) {
+            Spacer(Modifier.height(18.dp))
+            NabunginCard(padding = androidx.compose.foundation.layout.PaddingValues(18.dp)) {
+                Text("RENCANA HARI INI", style = MaterialTheme.typography.labelSmall, color = colors.muted)
+                Spacer(Modifier.height(6.dp))
+                Text(Money.format(snapshot.goals.filter { !it.isReached }.sumOf { it.dailyPlan }),
+                    style = MaterialTheme.typography.headlineMedium, color = colors.accent)
+                Text("Gabungan target harian dari tabungan yang belum selesai. Ini rencana, bukan uang yang sudah ditabung.",
+                    style = MaterialTheme.typography.bodySmall, color = colors.muted)
+            }
+        }
         Spacer(Modifier.height(24.dp))
         SectionHeader(
-            title = "Tujuan tabungan",
+            title = "Tabungan lu",
             trailing = {
                 NButton(
-                    text = "+ Tujuan",
+                    text = "+ Tabungan",
                     onClick = onNewGoal,
                     tone = dev.xykal.nabungin.ui.components.ButtonTone.Quiet,
                     fillWidth = false,
@@ -165,9 +182,9 @@ fun HomeScreen(
         if (snapshot.goals.isEmpty()) {
             EmptyState(
                 icon = AppIcons.Target,
-                title = "Belum ada tujuan",
+                title = "Belum ada tabungan",
                 body = "Bikin tujuan dulu: dana darurat, DP rumah, atau gadget baru. Nabungin bakal hitung pace harian lu.",
-                action = { NButton(text = "Bikin tujuan", onClick = onNewGoal, fillWidth = false) },
+                action = { NButton(text = "Buat tabungan", onClick = onNewGoal, fillWidth = false) },
             )
         } else {
             snapshot.goals.forEach { goal ->
@@ -231,6 +248,8 @@ private fun GoalCard(
             }
         }
         Spacer(Modifier.height(14.dp))
+        ProgressTrack(goal.progress, accent)
+        Spacer(Modifier.height(14.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
             ProgressRing(
                 progress = goal.progress,
@@ -252,12 +271,12 @@ private fun GoalCard(
                     color = if (goal.isReached) colors.accent else colors.onSurface,
                 )
                 Text(
-                    text = if (goal.depositCount == 0) "Belum ada setoran" else "${goal.depositCount} setoran - terakhir ${goal.lastDepositDay?.let { Dates.relative(it) } ?: "-"}",
+                    text = if (goal.dailyPlan > 0L) "Rencana ${Money.format(goal.dailyPlan)}/hari" else if (goal.depositCount == 0) "Belum ada tabungan masuk" else "${goal.depositCount} kali nabung",
                     style = MaterialTheme.typography.bodySmall,
                     color = colors.muted,
                 )
             }
-            NButton(text = "Setor", onClick = onDeposit, tone = dev.xykal.nabungin.ui.components.ButtonTone.Ghost, fillWidth = false)
+            NButton(text = "Tabung", onClick = onDeposit, tone = dev.xykal.nabungin.ui.components.ButtonTone.Ghost, fillWidth = false)
         }
     }
 }

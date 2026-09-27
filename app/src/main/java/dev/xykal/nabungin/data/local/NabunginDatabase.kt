@@ -4,11 +4,12 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [GoalEntity::class, DepositEntity::class, AutoRuleEntity::class],
-    version = 1,
+    version = 2,
     exportSchema = false,
 )
 abstract class NabunginDatabase : RoomDatabase() {
@@ -17,6 +18,14 @@ abstract class NabunginDatabase : RoomDatabase() {
     abstract fun autoRuleDao(): AutoRuleDao
 
     companion object {
+        /** Migrasi v1 -> v2 tanpa menghapus tujuan atau riwayat tabungan lama. */
+        val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE goals ADD COLUMN purpose TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE goals ADD COLUMN dailyPlan INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
         fun build(context: Context): NabunginDatabase =
             Room.databaseBuilder(context.applicationContext, NabunginDatabase::class.java, "nabungin.db")
                 .addCallback(object : Callback() {
@@ -25,7 +34,7 @@ abstract class NabunginDatabase : RoomDatabase() {
                         db.execSQL("PRAGMA foreign_keys = ON")
                     }
                 })
-                .fallbackToDestructiveMigration(dropAllTables = true)
+                .addMigrations(MIGRATION_1_2)
                 .build()
     }
 }

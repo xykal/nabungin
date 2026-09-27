@@ -25,7 +25,7 @@ class NabunginApp : Application(), Configuration.Provider {
         container.appScope.launch {
             runCatching {
                 if (!container.settings.current().seeded) {
-                    container.repository.seedIfEmpty()
+                    // Fresh installs start empty: real goals belong to the user, not to demo data.
                     container.settings.setSeeded()
                 }
                 val settings = container.settings.current()

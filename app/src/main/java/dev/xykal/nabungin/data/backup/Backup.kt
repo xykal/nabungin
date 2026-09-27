@@ -21,6 +21,8 @@ data class BackupGoal(
     val accentIndex: Int = 0,
     val iconKey: String = "coins",
     val category: String = "Umum",
+    val purpose: String = "",
+    val dailyPlan: Long = 0L,
     val createdAtMillis: Long = 0L,
     val archived: Boolean = false,
 )
@@ -88,7 +90,13 @@ class BackupManager(private val repository: SavingsRepository) {
                 input.readBytes().toString(Charsets.UTF_8)
             } ?: error("Tidak bisa membaca berkas")
             val file = json.decodeFromString<BackupFile>(text)
-            require(file.app == "nabungin") { "Berkas ini bukan backup Nabungin" }
+            require(file.app == "nabungin" && file.schema == 1) { "Format backup tidak dikenal" }
+            require(file.goals.size <= 2_000 && file.deposits.size <= 100_000) { "Backup terlalu besar" }
+            val ids = file.goals.map { it.id }.toSet()
+            require(ids.size == file.goals.size && ids.none { it <= 0L }) { "ID tujuan duplikat atau tidak valid" }
+            require(file.goals.all { it.targetAmount > 0L && it.dailyPlan >= 0L && it.name.isNotBlank() }) { "Target tabungan tidak valid" }
+            require(file.deposits.all { it.goalId in ids && it.amount > 0L }) { "Catatan tabungan tidak valid" }
+            require(file.rules.all { it.goalId in ids && it.amount > 0L }) { "Aturan otomatis tidak valid" }
             repository.importAll(
                 goals = file.goals.map { it.toEntity() },
                 deposits = file.deposits.map { it.toEntity() },
@@ -102,12 +110,14 @@ class BackupManager(private val repository: SavingsRepository) {
 private fun GoalEntity.toBackup() = BackupGoal(
     id = id, name = name, targetAmount = targetAmount, deadlineEpochDay = deadlineEpochDay,
     accentIndex = accentIndex, iconKey = iconKey, category = category,
+    purpose = purpose, dailyPlan = dailyPlan,
     createdAtMillis = createdAtMillis, archived = archived,
 )
 
 private fun BackupGoal.toEntity() = GoalEntity(
     id = id, name = name, targetAmount = targetAmount, deadlineEpochDay = deadlineEpochDay,
     accentIndex = accentIndex, iconKey = iconKey, category = category,
+    purpose = purpose, dailyPlan = dailyPlan,
     createdAtMillis = createdAtMillis, archived = archived,
 )
 
