@@ -17,6 +17,7 @@ local.properties
 # --- Signing & secrets: JANGAN pernah masuk repo ---
 *.jks
 *.keystore
+*.base64
 keystore.properties
 secrets.properties
 .env

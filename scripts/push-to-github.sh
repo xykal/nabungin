@@ -39,7 +39,10 @@ if [ "$STATUS" = "404" ]; then
 fi
 
 git remote remove origin 2>/dev/null || true
-git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${OWNER}/${REPO_NAME}.git"
-git push -u origin main
+git remote add origin "https://github.com/${OWNER}/${REPO_NAME}.git"
+# Header Auth cuma hidup selama command ini, nggak tersimpan di .git/config.
+AUTH_HEADER=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
+git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic ${AUTH_HEADER}" push -u origin main
+unset AUTH_HEADER
 
 echo "Beres. Buka https://github.com/${OWNER}/${REPO_NAME}/actions buat lihat build APK."
