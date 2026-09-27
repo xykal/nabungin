@@ -4,12 +4,12 @@ Set di: `Repository -> Settings -> Secrets and variables -> Actions -> New repos
 
 | Nama secret | Wajib? | Isi |
 | --- | --- | --- |
-| `KEYSTORE_BASE64` | Opsional | Hasil `base64 -w0 release.keystore` |
-| `KEYSTORE_PASSWORD` | Opsional | Password keystore |
-| `KEY_ALIAS` | Opsional | Alias key, default `nabungin` |
-| `KEY_PASSWORD` | Opsional | Password key (PKCS12 biasanya sama dengan store password) |
+| `KEYSTORE_BASE64` | Wajib | Hasil `base64 -w0 release.keystore` |
+| `KEYSTORE_PASSWORD` | Wajib | Password keystore |
+| `KEY_ALIAS` | Wajib | Alias key di keystore |
+| `KEY_PASSWORD` | Wajib | Password key (PKCS12 biasanya sama dengan store password) |
 
-Kalau `KEYSTORE_BASE64` kosong, workflow tetap jalan tapi APK release ditandatangani pakai debug key. Ini disengaja supaya CI tidak pernah gagal karena secret belum diisi.
+Kalau ada secret signing kosong, workflow gagal sebelum build. Tidak ada fallback debug-key untuk APK release.
 
 ## Urutan setup
 
@@ -36,8 +36,8 @@ cat release.keystore.base64
 | --- | --- |
 | Push ke `main`/`master` | Debug + release APK sebagai artifact |
 | Pull request | Sama, tapi cache Gradle read-only (nggak nulis cache ke branch utama) |
-| Push tag `v1.2.0` | Build + GitHub Release dengan APK dan `SHA256SUMS.txt` |
-| `workflow_dispatch` biasa | Build manual, versionName jadi `1.0.0-ci.<run number>` |
+| Push tag `v1.3.0` | Build + GitHub Release dengan APK dan `SHA256SUMS.txt` |
+| `workflow_dispatch` biasa | Build manual, versionName jadi `1.2.0-ci.<run number>` |
 | `workflow_dispatch` + `create_release` | Build + Release pakai tag `v<versionName>` |
 | `workflow_dispatch` + `bump_version` | Naikin versionName patch, commit dengan identitas `xykal`, push ke branch |
 

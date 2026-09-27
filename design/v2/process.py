@@ -51,5 +51,8 @@ for name, dst, width in [('logo_mascot','brand_mark',512),('ill_goal','art_goal'
         image=canvas
     else:
         image.thumbnail((width,560),Image.Resampling.LANCZOS)
+        canvas=Image.new('RGBA',(960,560))
+        canvas.alpha_composite(image,((960-image.width)//2,(560-image.height)//2))
+        image=canvas
     path=out/f'{dst}.png'; image.save(path,optimize=True)
     print(dst,'bbox',bb,'bytes',path.stat().st_size,'background',bg)
